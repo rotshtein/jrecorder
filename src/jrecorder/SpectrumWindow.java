@@ -94,7 +94,7 @@ public class SpectrumWindow
         
        
         
-        JFrame frame = new JFrame("Specturm");
+        final JFrame frame = new JFrame("Specturm");
         frame.addWindowListener(new WindowAdapter() {
         	@Override
         	public void windowClosing(WindowEvent arg0) 

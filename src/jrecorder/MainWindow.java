@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.SystemColor;
+import java.awt.Toolkit;
 import java.awt.Window.Type;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,7 +22,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -80,7 +80,7 @@ public class MainWindow  implements GuiInterface
 		txtStatus.setSize(new Dimension(487, 444));
 		txtStatus.setEditable(false);
 		txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
-		txtStatus.setBounds(0, 452, 481, 31);
+		txtStatus.setBounds(0, 463, 491, 31);
 		txtStatus.setColumns(10);
 		 f = new JFrame("Main Windows");
 		 f.addWindowListener(new WindowAdapter() {
@@ -149,6 +149,8 @@ public class MainWindow  implements GuiInterface
 		 			btnSpectrum.setEnabled(true);
 		 			btnRecord.setEnabled(true);
 		 			cmbAgc.setSelectedIndex(0);
+		 			numFileSize.setEnabled(true);
+		 			cmbFileSize.setEnabled(true);
 		 		}
 		 	}
 		 });
@@ -169,6 +171,8 @@ public class MainWindow  implements GuiInterface
 		 			btnSpectrum.setEnabled(false);
 		 			btnRecord.setEnabled(false);
 		 			cmbAgc.setSelectedIndex(1);
+		 			numFileSize.setEnabled(false);
+		 			cmbFileSize.setEnabled(false);
 
 		 		}
 
@@ -185,7 +189,7 @@ public class MainWindow  implements GuiInterface
 		 	}
 		 });
 		 btnSpectrum.setFont(new Font("Arial", Font.BOLD, 14));
-		 btnSpectrum.setBounds(10, 385, 103, 23);
+		 btnSpectrum.setBounds(10, 385, 125, 23);
 		 
 		 f.getContentPane().add(btnSpectrum);
 		 btnRecord.setFont(new Font("Arial", Font.BOLD, 14));
@@ -193,7 +197,7 @@ public class MainWindow  implements GuiInterface
 		 	public void actionPerformed(ActionEvent arg0) {
 		 	}
 		 });
-		 btnRecord.setBounds(123, 385, 103, 23);
+		 btnRecord.setBounds(145, 385, 103, 23);
 		 
 		 f.getContentPane().add(btnRecord);
 		 btnTransmit.setEnabled(false);
@@ -209,7 +213,7 @@ public class MainWindow  implements GuiInterface
 		 
 		 f.getContentPane().add(txtStatus);
 		 btnStop.setFont(new Font("Arial", Font.BOLD, 14));
-		 btnStop.setBounds(363, 418, 103, 23);
+		 btnStop.setBounds(366, 429, 103, 23);
 		 
 		 f.getContentPane().add(btnStop);
 		 pnlFrequency.setFont(new Font("Arial", Font.BOLD, 14));
@@ -289,9 +293,9 @@ public class MainWindow  implements GuiInterface
 		 		int returnVal;
 		 		JFileChooser jfc = new JFileChooser();
 		 		if (rdbtnRecord.isSelected())
-		 			returnVal = jfc.showOpenDialog(null);
-		 		else
 		 			returnVal = jfc.showSaveDialog(null);
+		 		else
+		 			returnVal = jfc.showOpenDialog(null);
 		 	    if (returnVal == JFileChooser.APPROVE_OPTION) 
 		 	    {
 		 	    	 File file = jfc.getSelectedFile();
@@ -300,7 +304,7 @@ public class MainWindow  implements GuiInterface
 		 	}
 		 });
 		 btnSpecifyFile.setFont(new Font("Arial", Font.BOLD, 14));
-		 btnSpecifyFile.setBounds(10, 65, 121, 23);
+		 btnSpecifyFile.setBounds(10, 65, 141, 23);
 		 
 		 pnlFileSize.add(btnSpecifyFile);
 		 txtFileName.setForeground(SystemColor.textText);
@@ -310,12 +314,12 @@ public class MainWindow  implements GuiInterface
 		 txtFileName.setFont(new Font("Arial", Font.PLAIN, 14));
 		 txtFileName.setEditable(false);
 		 txtFileName.setColumns(10);
-		 txtFileName.setBounds(141, 65, 305, 23);
+		 txtFileName.setBounds(161, 65, 285, 23);
 		 
 		 pnlFileSize.add(txtFileName);
 		 
-		 Red_icon = new ImageIcon("C:\\share\\jrecorder\\src\\jrecorder\\red-led.png");
-		 Green_icon = new ImageIcon("C:\\share\\jrecorder\\src\\jrecorder\\green-led.png");
+		 Red_icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/jrecorder/red-led.png"))); 
+		 Green_icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/jrecorder/green-led.png")));
 	     txtIP.setHorizontalAlignment(SwingConstants.CENTER);
 	     txtIP.setBounds(353, 49, 116, 23);
 	     f.getContentPane().add(txtIP);
@@ -336,7 +340,7 @@ public class MainWindow  implements GuiInterface
 	 private void Init() 
 	 {
 		 try {
-				param = new Parameters("config.ini");
+				param = new Parameters("recorder.ini");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				return ;
