@@ -11,6 +11,7 @@ import java.io.OutputStream;
 
 import javax.swing.JFrame;
 
+import org.apache.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -27,6 +28,7 @@ import javax.swing.JScrollPane;
 
 public class SpectrumWindow 
 {
+	final static Logger logger = Logger.getLogger("SpectrumWindow");
 	String filename;
 	String spectrun_exe;
 	ProcessBuilder spectrumProcess;
@@ -50,30 +52,31 @@ public class SpectrumWindow
         XYSeries series1 = new XYSeries("RF");
         try
         {
-        File file = new File(Filename);
-		
-		InputStream insputStream = new FileInputStream(file);
-		DataInputStream dIn = new DataInputStream(insputStream);
-		float x,y;
-
-        while (dIn.available() > 0) 
-        {
-
-            x =  dIn.readFloat();
-            y =  dIn.readFloat();
-            series1.add(x,y);
-        }
-        dIn.close();
-        insputStream.close();
-    
-        /*
-        for (int i = 0; i < (1024*32); i++)
-        {
-        	series1.add(i, i);
-        }*/
+	        File file = new File(Filename);
+			
+			InputStream insputStream = new FileInputStream(file);
+			DataInputStream dIn = new DataInputStream(insputStream);
+			float x,y;
+	
+	        while (dIn.available() > 0) 
+	        {
+	
+	            x =  dIn.readFloat();
+	            y =  dIn.readFloat();
+	            series1.add(x,y);
+	        }
+	        dIn.close();
+	        insputStream.close();
+	    
+	        /*
+	        for (int i = 0; i < (1024*32); i++)
+	        {
+	        	series1.add(i, i);
+	        }*/
         }
         catch (Exception e) 
         {
+        	logger.error("Failed getting spectrum info", e);
 			return;
 		}
         dataset.addSeries(series1);
@@ -121,7 +124,7 @@ public class SpectrumWindow
 
         } catch (IOException ex) 
         {
-            
+        	logger.error("Failed saving spectrum picture", ex);
         }
 	}
 	
@@ -139,7 +142,7 @@ public class SpectrumWindow
             }
             catch (Exception ex)
             {
-                //logger.Error(ex, "Failed to start spectrum process");
+                logger.error("Failed to start spectrum process", ex);
                 return null;
             }
             return spectrumProcess;

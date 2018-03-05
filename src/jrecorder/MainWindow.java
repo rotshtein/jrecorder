@@ -34,11 +34,15 @@ import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+
+import org.apache.log4j.Logger;
+
 import javax.swing.SwingConstants;
 
 
 public class MainWindow  implements GuiInterface
 {
+	final static Logger logger = Logger.getLogger("MainWindow");
 	private  JFrame f;
 	private final JRadioButton rdbtnRecord = new JRadioButton("Record");
 	private final JRadioButton rdbtnTransmit = new JRadioButton("Transmit");
@@ -92,10 +96,12 @@ public class MainWindow  implements GuiInterface
 		 	public void windowOpened(WindowEvent arg0) 
 		 	{
 		 		 Init();
+		 		logger.debug("Init spectrum");
 		 	}
 		 	@Override
 		 	public void windowClosing(WindowEvent arg0) 
 		 	{
+		 		logger.debug("Exit");
 		 		Stop();
 		 		System.exit(0);
 		 	}
@@ -342,13 +348,15 @@ public class MainWindow  implements GuiInterface
 	
 	 private void Init() 
 	 {
-		 try {
+		 try 
+		 {
 				param = new Parameters("recorder.ini");
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
+		 }
+		 catch (Exception e) 
+		 {
+				logger.error("Can't read configuration file", e);
 				return ;
-				//e.printStackTrace();
-			} 
+		} 
 			
 	    txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
 			
@@ -453,6 +461,7 @@ public class MainWindow  implements GuiInterface
 			// TODO Auto-generated catch block
 			JOptionPane.showMessageDialog(f, "Error while building spectrum.","Spectrum" , JOptionPane.ERROR_MESSAGE);
 			UpdateStatus("Error while Showing spectrum");
+			logger.error("Error while Showing spectrum");
 		}
 	 }
 	
@@ -462,8 +471,10 @@ public class MainWindow  implements GuiInterface
 				try {
 					MainWindow window = new MainWindow();
 					window.f.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
+				} 
+				catch (Exception e) 
+				{
+					logger.error("Failed openinng main window", e);
 				}
 			}
 		});

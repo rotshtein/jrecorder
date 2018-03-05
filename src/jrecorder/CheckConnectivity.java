@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.apache.log4j.Logger;
+
 public class CheckConnectivity implements Runnable 
 {
+	final static Logger logger = Logger.getLogger("CheckConnectivity");
 	GuiInterface _gui = null;
 	InetAddress inet;
 	Boolean _run = true;
@@ -13,11 +16,13 @@ public class CheckConnectivity implements Runnable
 	public CheckConnectivity(GuiInterface gui, String host)
 	{
 		_gui = gui;
-		try {
+		try
+		{
 			inet = InetAddress.getByName(host);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} 
+		catch (UnknownHostException e) 
+		{
+			logger.error("Fiald in getting host by name", e);
 		}
 		
 	}
@@ -40,8 +45,7 @@ public class CheckConnectivity implements Runnable
 			} 
 			catch (IOException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("Fiald in pinging to host", e);			
 			}
 			try 
 			{
@@ -49,8 +53,7 @@ public class CheckConnectivity implements Runnable
 			} 
 			catch (InterruptedException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("Fiald in Thread.sleep", e);
 			}
 		}
 	}
