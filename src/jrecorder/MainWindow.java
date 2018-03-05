@@ -52,14 +52,17 @@ public class MainWindow  implements GuiInterface
 	private final JTextField txtStatus = new JTextField();
 	private final JButton btnStop = new JButton("Stop");
 	private final JPanel pnlFrequency = new JPanel();
+	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbCenter = new JComboBox();
 	private final JSpinner numCenter = new JSpinner();
 	private final JSpinner numBAndwidth = new JSpinner();
 	private final JTextPane txtBandwidth = new JTextPane();
 	private final JPanel pnlAgc = new JPanel();
+	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbAgc = new JComboBox();
 	private final JSpinner numAgc = new JSpinner();
 	private final JPanel pnlFileSize = new JPanel();
+	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbFileSize = new JComboBox();
 	private final JSpinner numFileSize = new JSpinner();
 	private final JButton btnSpecifyFile = new JButton("Specify File");
@@ -73,6 +76,7 @@ public class MainWindow  implements GuiInterface
 	Parameters param;
 	
 	CheckConnectivity connectivityThread;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MainWindow()
 	{
 		txtStatus.setBackground(SystemColor.text);
@@ -229,13 +233,13 @@ public class MainWindow  implements GuiInterface
 		 		{
 		 			txtBandwidth.setText(BANDWIDTH);
 		 			numBAndwidth.setModel(new SpinnerNumberModel(50,1,150,1));
-		 			onConnectionChange(true);
+		 			//onConnectionChange(true);
 		 		}
 		 		else
 		 		{
 		 			txtBandwidth.setText(LOW_FREQH);
 		 			numBAndwidth.setModel(new SpinnerNumberModel(1000,950,2150,1));
-		 			onConnectionChange(false);
+		 			//onConnectionChange(false);
 		 		}
 		 	}
 		 });
@@ -289,7 +293,6 @@ public class MainWindow  implements GuiInterface
 		 btnSpecifyFile.addActionListener(new ActionListener() {
 		 	public void actionPerformed(ActionEvent event) 
 		 	{
-		 		String s = "";
 		 		int returnVal;
 		 		JFileChooser jfc = new JFileChooser();
 		 		if (rdbtnRecord.isSelected())

@@ -20,12 +20,9 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import javax.swing.JButton;
-import javax.swing.SwingConstants;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.FlowLayout;
-import java.awt.LayoutManager;
 import javax.swing.JScrollPane;
 
 public class SpectrumWindow 
