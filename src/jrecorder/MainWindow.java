@@ -1,39 +1,40 @@
 package jrecorder;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.SystemColor;
+import java.awt.Window.Type;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
 
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JTextPane;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
-
-import java.awt.Font;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-
-import java.io.File;
-import java.awt.Color;
-import java.awt.EventQueue;
 import javax.swing.UIManager;
-import java.awt.SystemColor;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.ItemEvent;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.JCheckBox;
-import javax.swing.JTextField;
-import java.awt.Window.Type;
-import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
+import javax.swing.SwingConstants;
 
 
 public class MainWindow  implements GuiInterface
@@ -69,6 +70,7 @@ public class MainWindow  implements GuiInterface
 	private ImageIcon Green_icon;
 	private JLabel lblLed;
 	private final JPanel pnlLed = new JPanel();
+	Parameters param;
 	
 	CheckConnectivity connectivityThread;
 	public MainWindow()
@@ -91,6 +93,7 @@ public class MainWindow  implements GuiInterface
 		 	public void windowClosing(WindowEvent arg0) 
 		 	{
 		 		Stop();
+		 		System.exit(0);
 		 	}
 		 });
 		 f.setSize(new Dimension(487, 523));
@@ -105,7 +108,7 @@ public class MainWindow  implements GuiInterface
 		 pnlAgc.setName("AGC");
 		 pnlAgc.setFont(new Font("Arial", Font.BOLD, 14));
 		 pnlAgc.setBorder(BorderFactory.createTitledBorder( "AGC" ));
-		 pnlAgc.setBounds(10, 161, 459, 66);
+		 pnlAgc.setBounds(10, 181, 459, 66);
 		 
 		 f.getContentPane().add(pnlAgc);
 		 cmbAgc.addItemListener(new ItemListener() {
@@ -150,7 +153,7 @@ public class MainWindow  implements GuiInterface
 		 	}
 		 });
 		 rdbtnRecord.setBackground(UIManager.getColor("scrollbar"));
-		 rdbtnRecord.setBounds(57, 29, 85, 23);
+		 rdbtnRecord.setBounds(61, 15, 85, 23);
 		 
 		 rdbtnRecord.setSelected(true);
 		 f.getContentPane().add(rdbtnRecord);
@@ -172,14 +175,13 @@ public class MainWindow  implements GuiInterface
 		 	}
 		 });
 		 rdbtnTransmit.setBackground(UIManager.getColor("scrollbar"));
-		 rdbtnTransmit.setBounds(182, 29, 109, 23);
+		 rdbtnTransmit.setBounds(229, 15, 109, 23);
 		 
 		 f.getContentPane().add(rdbtnTransmit);
 		 btnSpectrum.addActionListener(new ActionListener() {
 		 	public void actionPerformed(ActionEvent event) 
 		 	{
-		 		SpectrumWindow sw = new SpectrumWindow("xx");
-		 		sw.Show();
+		 		ShowSpectrumWindow();
 		 	}
 		 });
 		 btnSpectrum.setFont(new Font("Arial", Font.BOLD, 14));
@@ -211,7 +213,7 @@ public class MainWindow  implements GuiInterface
 		 
 		 f.getContentPane().add(btnStop);
 		 pnlFrequency.setFont(new Font("Arial", Font.BOLD, 14));
-		 pnlFrequency.setBounds(10, 59, 459, 91);
+		 pnlFrequency.setBounds(10, 79, 459, 91);
 		 
 		 f.getContentPane().add(pnlFrequency);
 		 pnlFrequency.setLayout(null);
@@ -265,7 +267,7 @@ public class MainWindow  implements GuiInterface
 		 pnlFileSize.setName("AGC");
 		 pnlFileSize.setFont(new Font("Arial", Font.BOLD, 14));
 		 pnlFileSize.setBorder(BorderFactory.createTitledBorder( "File Size" ));
-		 pnlFileSize.setBounds(10, 238, 459, 106);
+		 pnlFileSize.setBounds(10, 258, 459, 106);
 		 
 		 f.getContentPane().add(pnlFileSize);
 		 cmbFileSize.setModel(new DefaultComboBoxModel(new String[] {"Time [sec]", "Samples [x10^6]", "File Size [GB]"}));
@@ -314,9 +316,10 @@ public class MainWindow  implements GuiInterface
 		 
 		 Red_icon = new ImageIcon("C:\\share\\jrecorder\\src\\jrecorder\\red-led.png");
 		 Green_icon = new ImageIcon("C:\\share\\jrecorder\\src\\jrecorder\\green-led.png");
-	     txtIP.setBounds(318, 11, 116, 23);
+	     txtIP.setHorizontalAlignment(SwingConstants.CENTER);
+	     txtIP.setBounds(353, 49, 116, 23);
 	     f.getContentPane().add(txtIP);
-	     txtIP.setToolTipText("Filename to record to or transmit from");
+	     txtIP.setToolTipText("Ettus IP address");
 	     txtIP.setForeground(Color.BLACK);
 	     txtIP.setFont(new Font("Arial", Font.PLAIN, 14));
 	     txtIP.setEditable(false);
@@ -325,13 +328,25 @@ public class MainWindow  implements GuiInterface
 	     pnlLed.setBounds(288, -1, 20, 23);
 	     //f.getContentPane().add(pnlLed);
 	     lblLed = new JLabel(); 
-	     lblLed.setBounds(444, 11, 25, 25);
+	     lblLed.setBounds(404, 13, 25, 25);
 	     f.getContentPane().add(lblLed);
 	     lblLed.setIcon(Red_icon);
 	 }
 	
 	 private void Init() 
 	 {
+		 try {
+				param = new Parameters("config.ini");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				return ;
+				//e.printStackTrace();
+			} 
+			
+	    txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
+			
+		 
+		 
 		 connectivityThread = new CheckConnectivity(this, "127.0.0.1");
 	     Thread thread = new Thread(connectivityThread);
 	     thread.start();
@@ -359,11 +374,79 @@ public class MainWindow  implements GuiInterface
 		 if (status)
 		 {
 			 lblLed.setIcon(Green_icon);
+			 _connectionStatus = true;
 		 }
 		 else
 		 {
 			 lblLed.setIcon(Red_icon);
+			 _connectionStatus = false;
 		 }
+	 }
+	 
+	 public void UpdateStatus (final String status)
+	 {
+		 if (!SwingUtilities.isEventDispatchThread()) 
+		 {
+		     SwingUtilities.invokeLater(new Runnable() 
+		     {
+		       @Override
+		       public void run() {
+		    	   UpdateStatus(status);
+		       }
+		     });
+		     return;
+		 }
+		 //Now edit your gui objects
+		 txtStatus.setText(status);
+	 }
+	 
+	 private void ShowSpectrumWindow()
+	 {
+		if (!_connectionStatus)
+ 		{
+ 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address","Spectrum" , JOptionPane.ERROR_MESSAGE);
+ 			return;
+ 		}
+		
+		if (cmbCenter.getSelectedIndex() != 0) // Center
+		{
+			JOptionPane.showMessageDialog(f, "Spectrum Measurement needs Central Frequency Specified","Spectrum" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		double CenterFrequncy = (double)((Integer)numCenter.getValue()) * 1e6;
+		
+		
+		double Gain = -1; // Automatic;
+		if (cmbAgc.getSelectedIndex() == 1) // Manual
+		{
+			Gain = (double) numAgc.getValue();
+		}
+		
+		String SpectrumExe = param.Get("SpectrumExec", "./Spectrum");
+		
+		if (!new File(SpectrumExe).exists())
+		{
+			JOptionPane.showMessageDialog(f, "Spectrum exec not found. Please fix the configuration file","Spectrum" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		String SpectrumBin = param.Get("SpectrumBin", "Spectrum.dat");
+	 	SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
+	 	double Rate = Double.parseDouble(param.Get("Rate", "100e6"));
+	 	
+	 	sw.GetMessurment(CenterFrequncy, Rate, Gain, SpectrumBin);
+	 	try 
+	 	{
+			sw.Show(SpectrumBin);
+			UpdateStatus("Showing spectrum ....");
+		} 
+	 	catch (FileNotFoundException e) 
+	 	{
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(f, "Error while building spectrum.","Spectrum" , JOptionPane.ERROR_MESSAGE);
+			UpdateStatus("Error while Showing spectrum");
+		}
 	 }
 	
 	public static void main(String[] args) {
