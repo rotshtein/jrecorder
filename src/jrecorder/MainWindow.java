@@ -35,6 +35,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+
 import org.apache.log4j.Logger;
 
 import javax.swing.SwingConstants;
@@ -83,13 +84,8 @@ public class MainWindow  implements GuiInterface
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MainWindow()
 	{
-		txtStatus.setBackground(SystemColor.text);
-		txtStatus.setForeground(SystemColor.textText);
-		txtStatus.setSize(new Dimension(487, 444));
-		txtStatus.setEditable(false);
-		txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
-		txtStatus.setBounds(0, 463, 491, 31);
-		txtStatus.setColumns(10);
+		
+		
 		 f = new JFrame("Main Windows");
 		 f.addWindowListener(new WindowAdapter() {
 		 	@Override
@@ -221,7 +217,7 @@ public class MainWindow  implements GuiInterface
 		 
 		 f.getContentPane().add(chckbxLoop);
 		 
-		 f.getContentPane().add(txtStatus);
+		 
 		 btnStop.setFont(new Font("Arial", Font.BOLD, 14));
 		 btnStop.setBounds(366, 429, 103, 23);
 		 
@@ -344,6 +340,17 @@ public class MainWindow  implements GuiInterface
 	     lblLed.setBounds(404, 13, 25, 25);
 	     f.getContentPane().add(lblLed);
 	     lblLed.setIcon(Red_icon);
+	     
+	     
+	     
+	     txtStatus.setBackground(SystemColor.text);
+		 txtStatus.setForeground(SystemColor.textText);
+		 txtStatus.setSize(new Dimension(487, 444));
+		 txtStatus.setEditable(false);
+		 txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
+		 txtStatus.setBounds(0, 467,   481, 30);
+		 f.getContentPane().add(txtStatus);
+	     
 	 }
 	
 	 private void Init() 
