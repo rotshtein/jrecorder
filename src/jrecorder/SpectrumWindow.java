@@ -31,7 +31,8 @@ public class SpectrumWindow
 	final static Logger logger = Logger.getLogger("SpectrumWindow");
 	String filename;
 	String spectrun_exe;
-	ProcessBuilder spectrumProcess;
+	Process spectrumProcess;
+	ProcMon procMon;
 	
 	public SpectrumWindow(String SpectrunExe)
 	{
@@ -128,7 +129,7 @@ public class SpectrumWindow
         }
 	}
 	
-	public ProcessBuilder GetMessurment(double f0, double Rate, double Gain, String Filename)
+	public ProcMon GetMessurment(double f0, double Rate, double Gain, String Filename)
     {
 		
         if ( new File(spectrun_exe).exists())
@@ -136,17 +137,21 @@ public class SpectrumWindow
             try
             {
             	String vars[] = {spectrun_exe,"--mode spec","--freq " + f0, " --rate " + Rate," --file " + Filename};
-
-            	spectrumProcess = new ProcessBuilder(vars);
-            	spectrumProcess.start();
+            	spectrumProcess = Runtime.getRuntime().exec(vars, null);
+            	
+            	procMon = new ProcMon(spectrumProcess, "Show Spectrum");
+                Thread t = new Thread(procMon);
+                t.start();
+            	
             }
             catch (Exception ex)
             {
                 logger.error("Failed to start spectrum process", ex);
                 return null;
             }
-            return spectrumProcess;
+            return procMon;
         }
         return null;
     }
+	
 }

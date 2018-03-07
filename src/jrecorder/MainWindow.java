@@ -78,7 +78,8 @@ public class MainWindow  implements GuiInterface
 	private ImageIcon Green_icon;
 	private JLabel lblLed;
 	private final JPanel pnlLed = new JPanel();
-	Parameters param;
+	private Parameters param;
+	private ProcMon procMon = null;
 	
 	CheckConnectivity connectivityThread;
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -200,12 +201,21 @@ public class MainWindow  implements GuiInterface
 		 f.getContentPane().add(btnSpectrum);
 		 btnRecord.setFont(new Font("Arial", Font.BOLD, 14));
 		 btnRecord.addActionListener(new ActionListener() {
-		 	public void actionPerformed(ActionEvent arg0) {
+		 	public void actionPerformed(ActionEvent arg0) 
+		 	{
+		 		
+		 		Record();
 		 	}
 		 });
 		 btnRecord.setBounds(145, 385, 103, 23);
 		 
 		 f.getContentPane().add(btnRecord);
+		 btnTransmit.addActionListener(new ActionListener() {
+		 	public void actionPerformed(ActionEvent e) 
+		 	{
+		 		Transmit();
+		 	}
+		 });
 		 btnTransmit.setEnabled(false);
 		 btnTransmit.setFont(new Font("Arial", Font.BOLD, 14));
 		 btnTransmit.setBounds(283, 384, 103, 23);
@@ -216,6 +226,12 @@ public class MainWindow  implements GuiInterface
 		 chckbxLoop.setBounds(392, 385, 71, 23);
 		 
 		 f.getContentPane().add(chckbxLoop);
+		 btnStop.addActionListener(new ActionListener() {
+		 	public void actionPerformed(ActionEvent e) 
+		 	{
+		 		StopCurrentProcess();
+		 	}
+		 });
 		 
 		 
 		 btnStop.setFont(new Font("Arial", Font.BOLD, 14));
@@ -348,7 +364,7 @@ public class MainWindow  implements GuiInterface
 		 txtStatus.setSize(new Dimension(487, 444));
 		 txtStatus.setEditable(false);
 		 txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
-		 txtStatus.setBounds(0, 467,   481, 30);
+		 txtStatus.setBounds(0, 491,   481, 30);
 		 f.getContentPane().add(txtStatus);
 	     
 	 }
@@ -376,7 +392,25 @@ public class MainWindow  implements GuiInterface
 	 
 	 private void Stop()
 	 {
+		 StopCurrentProcess();
 		 connectivityThread.Stop();
+	 }
+	 
+	 private void StopCurrentProcess()
+	 {
+		 
+		 if (procMon== null)
+		 {
+			 UpdateStatus("Process not running");
+			 return;
+		 }
+		 
+		 if (!procMon.isComplete())
+		 {
+			 logger.warn("Killing process. [ " + procMon.description + " ]");
+			 UpdateStatus("Killing process. [ " + procMon.description + " ]");
+			 procMon.kill();
+		 }
 	 }
 	 
 	 public void onConnectionChange(final Boolean status)
@@ -430,6 +464,19 @@ public class MainWindow  implements GuiInterface
  			return;
  		}
 		
+		if (procMon != null)
+		{
+			if (!procMon.isComplete())
+			{
+				int dialogButton = JOptionPane.YES_NO_OPTION;
+				JOptionPane.showMessageDialog(f, "Process already running ["+procMon.description+"]. Do you want to stop the current process?","Spectrum" , dialogButton);
+				if (dialogButton == JOptionPane.NO_OPTION) 
+				{ 
+					return;
+				}
+			}
+		}
+		
 		if (cmbCenter.getSelectedIndex() != 0) // Center
 		{
 			JOptionPane.showMessageDialog(f, "Spectrum Measurement needs Central Frequency Specified","Spectrum" , JOptionPane.ERROR_MESSAGE);
@@ -457,7 +504,7 @@ public class MainWindow  implements GuiInterface
 	 	SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
 	 	double Rate = Double.parseDouble(param.Get("Rate", "100e6"));
 	 	
-	 	sw.GetMessurment(CenterFrequncy, Rate, Gain, SpectrumBin);
+	 	procMon = sw.GetMessurment(CenterFrequncy, Rate, Gain, SpectrumBin);
 	 	try 
 	 	{
 			sw.Show(SpectrumBin);
@@ -465,12 +512,191 @@ public class MainWindow  implements GuiInterface
 		} 
 	 	catch (FileNotFoundException e) 
 	 	{
-			// TODO Auto-generated catch block
 			JOptionPane.showMessageDialog(f, "Error while building spectrum.","Spectrum" , JOptionPane.ERROR_MESSAGE);
 			UpdateStatus("Error while Showing spectrum");
 			logger.error("Error while Showing spectrum");
 		}
 	 }
+	void Record()
+	{
+		if (!_connectionStatus)
+ 		{
+ 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address","Record" , JOptionPane.ERROR_MESSAGE);
+ 			return;
+ 		}
+		
+		if (procMon != null)
+		{
+			if (!procMon.isComplete())
+			{
+				int dialogButton = JOptionPane.YES_NO_OPTION;
+				JOptionPane.showMessageDialog(f, "Process already running ["+procMon.description+"]. Do you want to stop the current process?","Record" , dialogButton);
+				if (dialogButton == JOptionPane.NO_OPTION) 
+				{ 
+					return;
+				}
+			}
+		}
+		
+	
+		
+		double dNumSamples = 0;
+		double Val = (double)(Integer)numFileSize.getValue();
+        switch (cmbFileSize.getSelectedIndex())
+        {
+            case 0: //Time
+                dNumSamples = Math.ceil(Val * getRate());
+                break;
+
+            case 1:
+                dNumSamples = Val * 1e6;
+                break;
+
+            case 2:
+                dNumSamples = 1073741824 * Val * 0.25;
+                break;
+	        }
+		
+		String RecorderExe = param.Get("RecorderExec", "./Spectrum");
+		
+		if (!new File(RecorderExe).exists())
+		{
+			JOptionPane.showMessageDialog(f, "Recorder exec not found. Please fix the configuration file","Rercord" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		if (getFilename() == "")
+		{
+			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename","Rercord" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+	 	
+		Record rec = new Record(RecorderExe,"",this);
+		
+		try 
+	 	{
+	 		rec.Start(getF0(), getRate(), getGain(), getFilename(), dNumSamples);
+			UpdateStatus("Starting to record ....");
+			logger.info("Starting to record");
+		} 
+	 	catch (Exception e) 
+	 	{
+			JOptionPane.showMessageDialog(f, "Error while Recording:" + e.getMessage(),"Record" , JOptionPane.ERROR_MESSAGE);
+			UpdateStatus("Error while recording: " + e.getMessage());
+		}
+	}
+	
+	private void Transmit()
+	{
+		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
+		
+		if (!_connectionStatus)
+ 		{
+ 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address","Transmit" , JOptionPane.ERROR_MESSAGE);
+ 			return;
+ 		}
+		
+		if (procMon != null)
+		{
+			if (!procMon.isComplete())
+			{
+				int dialogButton = JOptionPane.YES_NO_OPTION;
+				JOptionPane.showMessageDialog(f, "Process already running ["+procMon.description+"]. Do you want to stop the current process?","Transmit" , dialogButton);
+				if (dialogButton == JOptionPane.NO_OPTION) 
+				{ 
+					return;
+				}
+			}
+		}
+		
+		Transmit tx = new Transmit(TransmitExe,"",this);
+		
+		Boolean Loop = chckbxLoop.isSelected();
+		
+		if ( getFilename() == "" | !(new File(getFilename()).exists()) )
+		{
+			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename","Rercord" , JOptionPane.ERROR_MESSAGE);
+			return;
+			
+		}
+
+		try 
+	 	{
+	 		tx.Start(getF0(), getRate(), getGain(), getFilename(), Loop);
+			UpdateStatus("Starting to transmit ....");
+			logger.info("Starting to transmit");
+			tx.run();
+		} 
+	 	catch (Exception e) 
+	 	{
+			JOptionPane.showMessageDialog(f, "Error while Transmiting:" + e.getMessage(),"Transmit" , JOptionPane.ERROR_MESSAGE);
+			UpdateStatus("Error while transmiting: " + e.getMessage());
+		}
+		
+	}
+	
+	public void OperationCompleted()
+	{
+		
+	}
+	
+	
+	private double getRate()
+	{
+		return Double.parseDouble(param.Get("Rate", "50e6"));
+	}
+	
+	private double getF0() throws Exception
+	{
+		double f0;
+		if (cmbCenter.getSelectedIndex() != 0) // Center
+		{
+			f0 = (double)((Integer)numCenter.getValue()) * 1e6;		
+		}
+		else
+		{
+			if ((Integer)numBAndwidth.getValue() > (Integer)numCenter.getValue())
+			{
+				JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch","Record" , JOptionPane.ERROR_MESSAGE);
+	 			throw new Exception("LowFreq > HighFreq");
+			}
+
+			double bw =  (Integer)numCenter.getValue() -  (Integer)numBAndwidth.getValue();
+			f0 = (double)( (Integer)numCenter.getValue() - (bw/2)) * 1e6;
+		}
+		return f0;
+	}
+/*
+	private double getBW() 
+	{
+		double bw;
+		if (cmbCenter.getSelectedIndex() != 0) // Center
+		{
+			bw = (double)((Integer)numBAndwidth.getValue()) * 1e6;		
+		}
+		else
+		{
+			bw =  (Integer)numCenter.getValue() -  (Integer)numBAndwidth.getValue();
+		}
+		return bw;
+	}
+	*/
+	
+	private double getGain()
+	{
+		double Gain = -1; // Automatic;
+		if (cmbAgc.getSelectedIndex() == 1) // Manual
+		{
+			Gain = (double) ((Integer)numAgc.getValue());
+		}
+		return Gain;
+	}
+
+	private String getFilename()
+	{
+		return txtFileName.getText();
+	}
+	
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -486,4 +712,6 @@ public class MainWindow  implements GuiInterface
 			}
 		});
 	}
+
+	
 }
