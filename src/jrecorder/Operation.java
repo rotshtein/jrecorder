@@ -62,7 +62,7 @@ public abstract class Operation implements Runnable
 		{
 			try 
 			{
-				ff = new FeedbackFile(messageFile);
+				ff = new FeedbackFile("/media/sf_share/spectrum.txt");//(messageFile);
 			} 
 			catch (Exception e) 
 			{

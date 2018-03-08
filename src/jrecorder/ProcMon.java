@@ -6,7 +6,7 @@ public class ProcMon implements Runnable
 {
 	final static Logger logger = Logger.getLogger("ProcMon");	
 	private Process _proc;
-	private ProcMon procMon;
+	
 	private volatile boolean _complete = false;
 	String description = "";
 
@@ -18,8 +18,7 @@ public class ProcMon implements Runnable
 	
 	public ProcMon (Process proc) 
 	{
-		procMon = new ProcMon(proc);
-		Thread t = new Thread(procMon);
+		Thread t = new Thread(this);
 		t.start();
 	}
 
@@ -48,7 +47,4 @@ public class ProcMon implements Runnable
 		}
 		_complete = true;
 	}
-
-	
-		
 }
