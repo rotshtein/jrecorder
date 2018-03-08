@@ -2,28 +2,32 @@ package jrecorder;
 
 import org.apache.log4j.Logger;
 
-public class ProcMon implements Runnable 
+public class ProcMon implements Runnable
 {
-	final static Logger logger = Logger.getLogger("ProcMon");	
-	private Process _proc;
-	
-	private volatile boolean _complete = false;
-	String description = "";
+	final static Logger	logger	= Logger.getLogger("ProcMon");
+	private Process		_proc;
 
-	public ProcMon (Process proc, String description) 
+	private volatile boolean	_complete	= false;
+	String						description	= "";
+
+	public ProcMon(Process proc, String description)
 	{
 		this(proc);
 		this.description = description;
 	}
-	
-	public ProcMon (Process proc) 
+
+	public ProcMon(Process proc)
 	{
+		_proc = proc;
 		Thread t = new Thread(this);
 		t.start();
 	}
 
-	public boolean isComplete() { return _complete; }
-	
+	public boolean isComplete()
+	{
+		return _complete;
+	}
+
 	public Boolean kill()
 	{
 		if (!_complete)
@@ -33,18 +37,17 @@ public class ProcMon implements Runnable
 		}
 		return false;
 	}
-	
-	public void run() 
+
+	public void run()
 	{
-		try 
+		try
 		{
 			_proc.waitFor();
-		} 
-		catch (InterruptedException e) 	
+		} catch (InterruptedException e)
 		{
 			logger.error("Failed to monitor process", e);
-		
+
 		}
-		_complete = true;
+  		_complete = true;
 	}
 }

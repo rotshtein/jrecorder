@@ -8,11 +8,12 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-public class Parameters 
+public class Parameters
 {
-	final static Logger logger = Logger.getLogger("Parameters");
-	File configFile = null;
-	Properties props;
+	final static Logger	logger		= Logger.getLogger("Parameters");
+	File				configFile	= null;
+	Properties			props;
+
 	public Parameters(String Filename) throws Exception
 	{
 		configFile = new File(Filename);
@@ -23,45 +24,44 @@ public class Parameters
 				logger.error("No configuration file");
 				throw (new Exception("No configuration file"));
 			}
-			
+
 		}
 		FileReader config = new FileReader(configFile);
-	    props = new Properties();
-	    props.load(config);
-	    config.close();
+		props = new Properties();
+		props.load(config);
+		config.close();
 	}
+
 	public String Get(String name)
 	{
-		 return Get(name, "");
+		return Get(name, "");
 	}
-	
+
 	public String Get(String name, String defaultValue)
 	{
-		String value="";
+		String value = "";
 		try
 		{
 			value = props.getProperty(name);
-		}
-		catch(Exception e) 
+		} catch (Exception e)
 		{
 			logger.error("Failed to get parameter value", e);
 		}
-		
+
 		if (value == null)
 		{
-			try 
+			try
 			{
-				Set(name,defaultValue);
+				Set(name, defaultValue);
 				value = defaultValue;
-			} 
-			catch (IOException e) 
+			} catch (IOException e)
 			{
 				logger.error("Failed to set default parameter value", e);
 			}
 		}
 		return value;
 	}
-	
+
 	public boolean Set(String name, String Value) throws IOException
 	{
 		props.setProperty(name, Value);
