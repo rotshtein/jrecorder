@@ -49,5 +49,6 @@ public class ProcMon implements Runnable
 
 		}
   		_complete = true;
+  		logger.info("Exiting procMon thread");
 	}
 }

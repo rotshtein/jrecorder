@@ -2,6 +2,7 @@ package jrecorder;
 
 import java.io.File;
 
+
 import org.apache.log4j.Logger;
 
 public abstract class Operation implements Runnable
@@ -31,10 +32,18 @@ public abstract class Operation implements Runnable
 		{
 			try
 			{
-				p = Runtime.getRuntime().exec(vars, null);
+				
+				ProcessBuilder builder = new ProcessBuilder(vars);
+				//builder.redirectOutput(new File("out.txt"));
+				//builder.redirectError(new File("out.txt"));
+				p = builder.start(); // may throw IOException
+
+				//while (!p.isAlive());
+
 				procMon = new ProcMon(p, operation);
 				procMonThread = new Thread(procMon,operation + "procMon");
 				procMonThread.start();
+				
 				feedbackFileThread = new Thread(this, operation + "feedback reader");
 				feedbackFileThread.start();
 			} catch (Exception ex)
@@ -66,16 +75,17 @@ public abstract class Operation implements Runnable
 		{
 			try
 			{
-				ff = new FeedbackFile("/media/sf_share/spectrum.txt");// (messageFile);
-			} catch (Exception e)
+				ff = new FeedbackFile(messageFile);
+			} 
+			catch (Exception e)
 			{
 				try
 				{
-					Thread.sleep(50);
-				} catch (InterruptedException e1)
+					Thread.sleep(500);
+				} 
+				catch (InterruptedException e1)
 				{
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+										
 				}
 			}
 		}
@@ -85,7 +95,7 @@ public abstract class Operation implements Runnable
 			logger.error("Faild in open feedback file");
 			return;
 		}
-		while (true)
+		while (p.isAlive())
 		{
 			// Read feedback file
 			if ((message = ff.GetNext()) != null)
@@ -111,5 +121,7 @@ public abstract class Operation implements Runnable
 				e.printStackTrace();
 			}
 		}
+		logger.info("Exiting feednbak file thread");
+		
 	}
 }

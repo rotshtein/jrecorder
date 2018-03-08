@@ -586,11 +586,11 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		Record rec = new Record(RecorderExe, "", this);
+		Record rec = new Record(RecorderExe, "./spectrum.txt", this);
 
 		try
 		{
-			rec.Start(getF0(), getRate(), getGain(), getFilename(), dNumSamples);
+			procMon = rec.Start(getF0(), getRate(), getGain(), getFilename(), dNumSamples);
 			UpdateStatus("Starting to record ....");
 			logger.info("Starting to record");
 		} catch (Exception e)
@@ -636,7 +636,7 @@ public class MainWindow implements GuiInterface
 
 		Boolean Loop = chckbxLoop.isSelected();
 
-		Transmit tx = new Transmit(TransmitExe, "", this);
+		Transmit tx = new Transmit(TransmitExe, "./spectrum.txt", this);
 
 		try
 		{
