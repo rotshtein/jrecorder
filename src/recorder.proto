@@ -1,0 +1,114 @@
+syntax = "proto3";
+package recorder_proto;
+
+/*************/
+/* Version 1 */
+/************/
+
+
+enum STATUS
+{
+	RUN = 0;
+	STOP = 1;
+	ERROR = 2;
+	WARNING = 3;
+}
+
+enum OPCODE
+{
+	HEADER = 0;
+	ACK = 1;
+	NACK = 2;
+	SPECTRUM = 3;
+	RECORD = 4;
+	PLAY_CMD = 5;
+	STOP_CMD = 6;
+	STATUS_REQUEST = 7;
+	STATUS_REPLAY = 8;
+}
+
+/*****************************************************************************************************************************/
+//
+message Header
+{
+	int32 sequence = 1;
+	OPCODE opcode = 2;			// Opcode
+	bytes message_data = 3;
+}
+
+
+/*****************************************************************************************************************************/
+// 
+message SpectrumCommand
+{
+	double frequency = 1;			// Central frequency in Hz. legal values are 950,000-2,150,000
+	double rate = 2;				// sampling rate in Hz - default 100e6
+	string filename = 3;			// The pull path for the spectrum pairs in - file location and name
+}
+
+/*****************************************************************************************************************************/
+// 
+message RecordCommand
+{
+	double frequency = 1;			// Central frequency in Hz. legal values are 950,000-2,150,000
+	double rate = 2;				// sampling rate in Hz - default 100e6
+	double gain = 3;				// gain - default is 0; can be 0-31.5
+	string filename = 4;			// The pull path for the recorded file location and name
+	double number_of_samples = 5;	// File size in samples
+}
+
+/*****************************************************************************************************************************/
+// 
+message PlayCommand
+{
+	double frequency = 1;			// Central frequency in Hz. legal values are 950,000-2,150,000
+	double rate = 2;				// sampling rate in Hz - default 100e6
+	double gain = 3;				// gain - default is 0; can be 0-31.5
+	string filename = 4;			// The pull path for the recorded file location and name
+	double number_of_samples = 5;	// File size in samples
+}
+
+/*****************************************************************************************************************************/
+// This command stops the current running action (spectrum, record or play)
+message StopCommand
+{
+
+}
+
+/*****************************************************************************************************************************/
+// This replay us sent as responce to Spectrum, Record, Play or STOP_CMD
+message Ack
+{
+
+}
+
+/*****************************************************************************************************************************/
+// This replay us sent as responce to Spectrum, Record, Play or STOP_CMD
+message Nack
+{
+	string description = 1;
+}
+
+/*****************************************************************************************************************************/
+// This should be sent in order to get StatusReplay
+message StatusRequest
+{
+
+}
+
+/*****************************************************************************************************************************/
+// This replay is sent as response to StatusRequest, ss event for new warning/error or when ever the status changes, new warning 
+message StatusReplay
+{
+	STATUS status = 1;
+	string status_description = 2;
+	double received_samples = 3;
+	double played_samples = 4;
+	double error_samples = 5;
+	bool warning = 6;
+	string warning_message = 7;
+	int32 warning_number = 8;
+	bool error = 9;
+	string error_mMessage = 10;
+	int32 error_number = 11;
+}
