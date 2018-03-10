@@ -42,6 +42,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import recorder_proto.Recorder.Header;
 import recorder_proto.Recorder.OPCODE;
+import recorder_proto.Recorder.PlayCommand;
 import recorder_proto.Recorder.RecordCommand;
 import recorder_proto.Recorder.STATUS;
 import recorder_proto.Recorder.SpectrumCommand;
@@ -410,27 +411,23 @@ public class MainWindow implements GuiInterface
 		String host = param.Get("ListenAddress", "127.0.0.1");
 		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
 
-		
-		
-		Header h = Header.newBuilder().setOpcode(OPCODE.RECORD).build();
 		RecordCommand  m = RecordCommand.newBuilder() 
-				.setHeader(h)
 				.setFilename("./recorded.dat")
 				.setFrequency(1000*10e6)
 				.setGain(2.3)
 				.setNumberOfSamples(10e10)
 				.setRate(10e6)
 				.build();
+	
+		Header h = Header.newBuilder().setOpcode(OPCODE.RECORD).setMessageData(m.toByteString()).build();
 		  
 		byte [] buffer = m.toByteArray();
 		
 		Header hh = null;
-		SpectrumCommand mm = null;
+		
 		try
 		{
-			mm = SpectrumCommand.parseFrom(buffer);
-			hh = mm.getHeader();
-			
+			hh = Header.parseFrom(buffer);
 		}
 		catch (InvalidProtocolBufferException e)
 		{
@@ -443,7 +440,7 @@ public class MainWindow implements GuiInterface
 			RecordCommand rr = null;
 			try
 			{
-				rr = RecordCommand.parseFrom(buffer);
+				rr = RecordCommand.parseFrom(h.getMessageData());
 			}
 			catch (InvalidProtocolBufferException e)
 			{
@@ -454,10 +451,29 @@ public class MainWindow implements GuiInterface
 		}
 		else if (i == OPCODE.PLAY_CMD)
 		{
-			
+			PlayCommand rr = null;
+			try
+			{
+				rr = PlayCommand.parseFrom(h.getMessageData());
+			}
+			catch (InvalidProtocolBufferException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		else if (i == OPCODE.SPECTRUM)
 		{
+			SpectrumCommand rr = null;
+			try
+			{
+				rr = SpectrumCommand.parseFrom(h.getMessageData());
+			}
+			catch (InvalidProtocolBufferException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 		}
 		server = new ManagementServer(new InetSocketAddress(host, port));
