@@ -15,6 +15,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.InetSocketAddress;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -34,8 +35,16 @@ import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-
 import org.apache.log4j.Logger;
+
+import com.google.protobuf.AbstractMessage.Builder;
+import com.google.protobuf.InvalidProtocolBufferException;
+
+import recorder_proto.Recorder.Header;
+import recorder_proto.Recorder.OPCODE;
+import recorder_proto.Recorder.RecordCommand;
+import recorder_proto.Recorder.STATUS;
+import recorder_proto.Recorder.SpectrumCommand;
 
 import javax.swing.SwingConstants;
 
@@ -78,8 +87,8 @@ public class MainWindow implements GuiInterface
 	private final JPanel		pnlLed				= new JPanel();
 	private Parameters			param;
 	private ProcMon				procMon				= null;
-
-	CheckConnectivity connectivityThread;
+	private ManagementServer 	server;
+	CheckConnectivity 			connectivityThread;
 
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -397,6 +406,64 @@ public class MainWindow implements GuiInterface
 		connectivityThread = new CheckConnectivity(this, "127.0.0.1");
 		Thread thread = new Thread(connectivityThread);
 		thread.start();
+		
+		String host = param.Get("ListenAddress", "127.0.0.1");
+		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
+
+		
+		
+		Header h = Header.newBuilder().setOpcode(OPCODE.RECORD).build();
+		RecordCommand  m = RecordCommand.newBuilder() 
+				.setHeader(h)
+				.setFilename("./recorded.dat")
+				.setFrequency(1000*10e6)
+				.setGain(2.3)
+				.setNumberOfSamples(10e10)
+				.setRate(10e6)
+				.build();
+		  
+		byte [] buffer = m.toByteArray();
+		
+		Header hh = null;
+		SpectrumCommand mm = null;
+		try
+		{
+			mm = SpectrumCommand.parseFrom(buffer);
+			hh = mm.getHeader();
+			
+		}
+		catch (InvalidProtocolBufferException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		OPCODE i = hh.getOpcode();
+		if ( i == OPCODE.RECORD)
+		{
+			RecordCommand rr = null;
+			try
+			{
+				rr = RecordCommand.parseFrom(buffer);
+			}
+			catch (InvalidProtocolBufferException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		else if (i == OPCODE.PLAY_CMD)
+		{
+			
+		}
+		else if (i == OPCODE.SPECTRUM)
+		{
+			
+		}
+		server = new ManagementServer(new InetSocketAddress(host, port));
+		server.start();
+
+		
 	}
 
 	private void Stop()
