@@ -25,7 +25,10 @@ enum OPCODE
 	STOP_CMD = 6;
 	STATUS_REQUEST = 7;
 	STATUS_REPLAY = 8;
+	STATUS_MESSAGE = 9;
+	CONNECTION_STATUS = 10;
 }
+
 
 /*****************************************************************************************************************************/
 //
@@ -43,7 +46,9 @@ message SpectrumCommand
 {
 	double frequency = 1;			// Central frequency in Hz. legal values are 950,000-2,150,000
 	double rate = 2;				// sampling rate in Hz - default 100e6
-	string filename = 3;			// The pull path for the spectrum pairs in - file location and name
+	double gain = 3;				// gain - default is 0; can be 0-31.5
+	string filename = 4;			// The pull path for the spectrum pairs in - file location and name
+	string application_execute = 5;	// Binary to execute
 }
 
 /*****************************************************************************************************************************/
@@ -55,6 +60,7 @@ message RecordCommand
 	double gain = 3;				// gain - default is 0; can be 0-31.5
 	string filename = 4;			// The pull path for the recorded file location and name
 	double number_of_samples = 5;	// File size in samples
+	string application_execute = 6;	// Binary to execute
 }
 
 /*****************************************************************************************************************************/
@@ -65,7 +71,9 @@ message PlayCommand
 	double rate = 2;				// sampling rate in Hz - default 100e6
 	double gain = 3;				// gain - default is 0; can be 0-31.5
 	string filename = 4;			// The pull path for the recorded file location and name
-	double number_of_samples = 5;	// File size in samples
+	bool	loop = 5;				// Transmit the file in loop
+	double number_of_samples = 6;	// File size in samples
+	string application_execute = 7;	// Binary to execute
 }
 
 /*****************************************************************************************************************************/
@@ -96,6 +104,13 @@ message StatusRequest
 
 }
 
+// This should be sent in order to get StatusReplay
+message StatusMessage
+{
+	string message = 1;
+}
+
+
 /*****************************************************************************************************************************/
 // This replay is sent as response to StatusRequest, ss event for new warning/error or when ever the status changes, new warning 
 message StatusReplay
@@ -111,4 +126,11 @@ message StatusReplay
 	bool error = 9;
 	string error_mMessage = 10;
 	int32 error_number = 11;
+}
+
+/*****************************************************************************************************************************/
+// This replay is sent as response to StatusRequest, ss event for new warning/error or when ever the status changes, new warning
+message ConnectionStatus
+{
+	bool status = 1;
 }

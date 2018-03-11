@@ -54,6 +54,18 @@ public class SpectrumWindow
 		{
 			File file = new File(Filename);
 
+			int i = 0;
+			while (!file.exists())
+			{
+				Thread.sleep(100);
+				if (i++ > 20)
+				{
+					series1.add(1, 2);
+					series1.add(2, 2);
+					return;
+				}
+			}
+			
 			InputStream insputStream = new FileInputStream(file);
 			DataInputStream dIn = new DataInputStream(insputStream);
 			float x, y;

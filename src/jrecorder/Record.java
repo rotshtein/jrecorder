@@ -7,9 +7,9 @@ public class Record extends Operation
 {
 	final static Logger logger = Logger.getLogger("Record");
 
-	public Record(String TransmitExe, String messageFile, GuiInterface gui)
+	public Record(String RecordExe, String messageFile, GuiInterface gui)
 	{
-		super(TransmitExe, messageFile, gui, "Record");
+		super(RecordExe, messageFile, gui, "Record");
 	}
 
 	public ProcMon Start(double f0, double Rate, double Gain, String Filename, double NumSamples) throws Exception

@@ -1,5 +1,6 @@
 package jrecorder;
 
+import org.java_websocket.WebSocket;
 
 public interface ManagementInfo
 {
@@ -10,7 +11,7 @@ public interface ManagementInfo
 		ERROR,
 		WARN
 	}
-	
+	void setConnection(WebSocket conn);
 	void getStatus(MANAGMENT_STATUS s);
 	void setError(Boolean e);
 	void setErrorMessage(String e);

@@ -16,6 +16,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -90,6 +92,7 @@ public class MainWindow implements GuiInterface
 	private ProcMon				procMon				= null;
 	private ManagementServer 	server;
 	CheckConnectivity 			connectivityThread;
+	private ManagementClient 	client;
 
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -476,10 +479,17 @@ public class MainWindow implements GuiInterface
 			}
 			
 		}
-		server = new ManagementServer(new InetSocketAddress(host, port));
+		server = new ManagementServer(new InetSocketAddress(host, port), this);
 		server.start();
-
 		
+		try
+		{
+			client = new ManagementClient(new URI("ws://127.0.0.1:8887"), this);
+		}
+		catch (URISyntaxException e)
+		{
+			logger.error("Wrong URI",e);
+		}
 	}
 
 	private void Stop()
@@ -595,12 +605,21 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-
+		
 		String SpectrumBin = param.Get("SpectrumBin", "Spectrum.dat");
+		double Rate = Double.parseDouble(param.Get("Rate", "100e6"));	
+		
+		client.SendSpectrumCommand(CenterFrequncy, Rate, Gain, SpectrumBin, SpectrumExe);
+		
+		if (client.WaitForAck(1000) == false)
+		{
+			UpdateStatus("Communication timeout");
+			return;
+		}
+			
+		
 		SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
-		double Rate = Double.parseDouble(param.Get("Rate", "100e6"));
 
-		procMon = sw.GetMessurment(CenterFrequncy, Rate, Gain, SpectrumBin);
 		try
 		{
 			sw.Show(SpectrumBin);
@@ -669,6 +688,8 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
+		//client.SendRecordCommand()
+		/*
 		Record rec = new Record(RecorderExe, "./spectrum.txt", this);
 
 		try
@@ -681,7 +702,7 @@ public class MainWindow implements GuiInterface
 			JOptionPane.showMessageDialog(f, "Error while Recording:" + e.getMessage(), "Record",
 					JOptionPane.ERROR_MESSAGE);
 			UpdateStatus("Error while recording: " + e.getMessage());
-		}
+		}*/
 	}
 
 	private void Transmit()
