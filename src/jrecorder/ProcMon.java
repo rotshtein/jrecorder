@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 public class ProcMon implements Runnable
 {
+
 	final static Logger	logger	= Logger.getLogger("ProcMon");
 	private Process		_proc;
 
@@ -43,12 +44,13 @@ public class ProcMon implements Runnable
 		try
 		{
 			_proc.waitFor();
-		} catch (InterruptedException e)
+		}
+		catch (InterruptedException e)
 		{
 			logger.error("Failed to monitor process", e);
 
 		}
-  		_complete = true;
-  		logger.info("Exiting procMon thread");
+		_complete = true;
+		logger.info("Exiting procMon thread");
 	}
 }

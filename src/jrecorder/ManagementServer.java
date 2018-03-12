@@ -18,13 +18,15 @@ import recorder_proto.Recorder.OPCODE;
 
 public class ManagementServer extends WebSocketServer implements ConnectionInterface
 {
-	static Logger logger = Logger.getLogger("ManagementServer");
-	ManagmentParser parser = null;
-	CheckConnectivity 			connectivityThread;
-	BlockingQueue<AbstractMap.SimpleEntry<byte [], WebSocket>> queue = null;
-	Boolean connectionStatus = false;
-	 
-	public ManagementServer(InetSocketAddress address)  
+
+	static Logger												logger				= Logger
+			.getLogger("ManagementServer");
+	ManagmentParser												parser				= null;
+	CheckConnectivity											connectivityThread;
+	BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>>	queue				= null;
+	Boolean														connectionStatus	= false;
+
+	public ManagementServer(InetSocketAddress address)
 	{
 		super(address);
 		connectivityThread = new CheckConnectivity(this, "127.0.0.1");
@@ -41,7 +43,7 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 			logger.error("Parse error", e);
 		}
 	}
-	
+
 	public void Stop()
 	{
 		try
@@ -54,11 +56,12 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 		}
 		connectivityThread.Stop();
 	}
-	
+
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake)
 	{
-		//conn.send("Welcome to the server!"); // This method sends a message to the new client
+		// conn.send("Welcome to the server!"); // This method sends a message to the
+		// new client
 		// broadcast( "new connection: " + handshake.getResourceDescriptor() ); //This
 		// method sends a message to all clients connected
 		logger.info("new connection to " + conn.getRemoteSocketAddress());
@@ -67,7 +70,8 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	@Override
 	public void onClose(WebSocket conn, int code, String reason, boolean remote)
 	{
-		logger.info("closed " + conn.getRemoteSocketAddress() + " with exit code " + code + " additional info: " + reason);
+		logger.info(
+				"closed " + conn.getRemoteSocketAddress() + " with exit code " + code + " additional info: " + reason);
 	}
 
 	@Override
@@ -80,9 +84,9 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	@Override
 	public void onMessage(WebSocket conn, ByteBuffer message)
 	{
-		
-		//conn.send("received ByteBuffer from " + conn.getRemoteSocketAddress());
-		//parser.Parse(message.array(), conn);
+
+		// conn.send("received ByteBuffer from " + conn.getRemoteSocketAddress());
+		// parser.Parse(message.array(), conn);
 		try
 		{
 			queue.put(new SimpleEntry<byte[], WebSocket>(message.array(), conn));
@@ -96,7 +100,7 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	@Override
 	public void onError(WebSocket conn, Exception ex)
 	{
-		logger.error("an error occured on connection " ,ex);
+		logger.error("an error occured on connection ", ex);
 	}
 
 	@Override
@@ -114,19 +118,14 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 			SendConnectionStatus(Status, conn);
 		}
 	}
-	
+
 	public void SendConnectionStatus(Boolean status, WebSocket conn)
 	{
-		ConnectionStatus cs = ConnectionStatus.newBuilder()
-				.setStatus(status)
-				.build();
-		
-		Header h = Header.newBuilder()
-				.setSequence(0)
-				.setOpcode(OPCODE.CONNECTION_STATUS)
-				.setMessageData(cs.toByteString())
-				.build();
-		
+		ConnectionStatus cs = ConnectionStatus.newBuilder().setStatus(status).build();
+
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.CONNECTION_STATUS)
+				.setMessageData(cs.toByteString()).build();
+
 		conn.send(h.toByteArray());
 	}
 }

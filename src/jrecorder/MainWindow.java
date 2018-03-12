@@ -39,11 +39,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 
-
 import javax.swing.SwingConstants;
 
 public class MainWindow implements GuiInterface
 {
+
 	final static Logger			logger			= Logger.getLogger("MainWindow");
 	private JFrame				f;
 	private final JRadioButton	rdbtnRecord		= new JRadioButton("Record");
@@ -80,8 +80,8 @@ public class MainWindow implements GuiInterface
 	private JLabel				lblLed;
 	private final JPanel		pnlLed				= new JPanel();
 	private Parameters			param;
-	private ManagementServer 	server;
-	private ManagementClient 	client;
+	private ManagementServer	server;
+	private ManagementClient	client;
 
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -91,6 +91,7 @@ public class MainWindow implements GuiInterface
 		f = new JFrame("Main Windows");
 		f.addWindowListener(new WindowAdapter()
 		{
+
 			@Override
 			public void windowOpened(WindowEvent arg0)
 			{
@@ -123,13 +124,15 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(pnlAgc);
 		cmbAgc.addItemListener(new ItemListener()
 		{
+
 			public void itemStateChanged(ItemEvent event)
 			{
 				if (event.getItem().toString().equals(cmbAgc.getItemAt(0).toString()))
 				{
 					txtStatus.setText("Automatic AGC");
 					numAgc.setEnabled(false);
-				} else
+				}
+				else
 				{
 					txtStatus.setText("Manual AGC");
 					numAgc.setEnabled(true);
@@ -151,6 +154,7 @@ public class MainWindow implements GuiInterface
 		rdbtnRecord.setFont(new Font("Arial", Font.BOLD, 14));
 		rdbtnRecord.addItemListener(new ItemListener()
 		{
+
 			public void itemStateChanged(ItemEvent arg0)
 			{
 				if (rdbtnRecord.isSelected())
@@ -175,6 +179,7 @@ public class MainWindow implements GuiInterface
 		rdbtnTransmit.setFont(new Font("Arial", Font.BOLD, 14));
 		rdbtnTransmit.addItemListener(new ItemListener()
 		{
+
 			public void itemStateChanged(ItemEvent arg0)
 			{
 				if (rdbtnTransmit.isSelected())
@@ -199,6 +204,7 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(rdbtnTransmit);
 		btnSpectrum.addActionListener(new ActionListener()
 		{
+
 			public void actionPerformed(ActionEvent event)
 			{
 				ShowSpectrumWindow();
@@ -211,6 +217,7 @@ public class MainWindow implements GuiInterface
 		btnRecord.setFont(new Font("Arial", Font.BOLD, 14));
 		btnRecord.addActionListener(new ActionListener()
 		{
+
 			public void actionPerformed(ActionEvent arg0)
 			{
 
@@ -222,6 +229,7 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(btnRecord);
 		btnTransmit.addActionListener(new ActionListener()
 		{
+
 			public void actionPerformed(ActionEvent e)
 			{
 				Transmit();
@@ -239,6 +247,7 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(chckbxLoop);
 		btnStop.addActionListener(new ActionListener()
 		{
+
 			public void actionPerformed(ActionEvent e)
 			{
 				StopCurrentProcess();
@@ -258,6 +267,7 @@ public class MainWindow implements GuiInterface
 		pnlFrequency.setBorder(BorderFactory.createTitledBorder("Frequency Specification"));
 		cmbCenter.addItemListener(new ItemListener()
 		{
+
 			public void itemStateChanged(ItemEvent event)
 			{
 				if (event.getItem().toString().startsWith(cmbCenter.getItemAt(0).toString()))
@@ -265,7 +275,8 @@ public class MainWindow implements GuiInterface
 					txtBandwidth.setText(BANDWIDTH);
 					numBAndwidth.setModel(new SpinnerNumberModel(50, 1, 150, 1));
 					// onConnectionChange(true);
-				} else
+				}
+				else
 				{
 					txtBandwidth.setText(LOW_FREQH);
 					numBAndwidth.setModel(new SpinnerNumberModel(1000, 950, 2150, 1));
@@ -323,14 +334,13 @@ public class MainWindow implements GuiInterface
 		pnlFileSize.add(numFileSize);
 		btnSpecifyFile.addActionListener(new ActionListener()
 		{
+
 			public void actionPerformed(ActionEvent event)
 			{
 				int returnVal;
 				JFileChooser jfc = new JFileChooser();
-				if (rdbtnRecord.isSelected())
-					returnVal = jfc.showSaveDialog(null);
-				else
-					returnVal = jfc.showOpenDialog(null);
+				if (rdbtnRecord.isSelected()) returnVal = jfc.showSaveDialog(null);
+				else returnVal = jfc.showOpenDialog(null);
 				if (returnVal == JFileChooser.APPROVE_OPTION)
 				{
 					File file = jfc.getSelectedFile();
@@ -388,7 +398,8 @@ public class MainWindow implements GuiInterface
 		try
 		{
 			param = new Parameters("recorder.ini");
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			logger.error("Can't read configuration file", e);
 			return;
@@ -396,21 +407,19 @@ public class MainWindow implements GuiInterface
 
 		txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
 
-		
-		
 		String host = param.Get("ListenAddress", "127.0.0.1");
 		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
 
 		server = new ManagementServer(new InetSocketAddress(host, port));
 		server.start();
-		
+
 		try
 		{
 			client = new ManagementClient(new URI("ws://127.0.0.1:8887"), this);
 		}
 		catch (URISyntaxException e)
 		{
-			logger.error("Wrong URI",e);
+			logger.error("Wrong URI", e);
 		}
 	}
 
@@ -430,6 +439,7 @@ public class MainWindow implements GuiInterface
 		{
 			SwingUtilities.invokeLater(new Runnable()
 			{
+
 				@Override
 				public void run()
 				{
@@ -443,7 +453,8 @@ public class MainWindow implements GuiInterface
 		{
 			lblLed.setIcon(Green_icon);
 			_connectionStatus = true;
-		} else
+		}
+		else
 		{
 			lblLed.setIcon(Red_icon);
 			_connectionStatus = false;
@@ -456,6 +467,7 @@ public class MainWindow implements GuiInterface
 		{
 			SwingUtilities.invokeLater(new Runnable()
 			{
+
 				@Override
 				public void run()
 				{
@@ -500,26 +512,26 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		
+
 		String SpectrumBin = param.Get("SpectrumBin", "Spectrum.dat");
-		double Rate = Double.parseDouble(param.Get("Rate", "100e6"));	
-		
+		double Rate = Double.parseDouble(param.Get("Rate", "100e6"));
+
 		client.SendSpectrumCommand(CenterFrequncy, Rate, Gain, SpectrumBin, SpectrumExe);
-		
+
 		if (client.WaitForAck(1000) == false)
 		{
 			UpdateStatus("Communication timeout");
 			return;
 		}
-			
-		
+
 		SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
 
 		try
 		{
 			sw.Show(SpectrumBin);
 			UpdateStatus("Showing spectrum ....");
-		} catch (FileNotFoundException e)
+		}
+		catch (FileNotFoundException e)
 		{
 			JOptionPane.showMessageDialog(f, "Error while building spectrum.", "Spectrum", JOptionPane.ERROR_MESSAGE);
 			UpdateStatus("Error while Showing spectrum");
@@ -540,17 +552,17 @@ public class MainWindow implements GuiInterface
 		double Val = (double) (Integer) numFileSize.getValue();
 		switch (cmbFileSize.getSelectedIndex())
 		{
-			case 0: // Time
-				dNumSamples = Math.ceil(Val * getRate());
-				break;
+		case 0: // Time
+			dNumSamples = Math.ceil(Val * getRate());
+			break;
 
-			case 1:
-				dNumSamples = Val * 1e6;
-				break;
+		case 1:
+			dNumSamples = Val * 1e6;
+			break;
 
-			case 2:
-				dNumSamples = 1073741824 * Val * 0.25;
-				break;
+		case 2:
+			dNumSamples = 1073741824 * Val * 0.25;
+			break;
 		}
 
 		String RecorderExe = param.Get("RecorderExec", "./Spectrum");
@@ -568,7 +580,7 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		
+
 		double CentralFreq = 0;
 		try
 		{
@@ -576,12 +588,13 @@ public class MainWindow implements GuiInterface
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",	JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",
+					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
-		client.SendRecordCommand(CentralFreq, getRate(),  getGain(), getFilename(), dNumSamples, RecorderExe);
-		
+		client.SendRecordCommand(CentralFreq, getRate(), getGain(), getFilename(), dNumSamples, RecorderExe);
+
 	}
 
 	private void Transmit()
@@ -600,7 +613,7 @@ public class MainWindow implements GuiInterface
 			return;
 
 		}
-		
+
 		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
 
 		if (!new File(TransmitExe).exists())
@@ -616,7 +629,7 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		
+
 		double CentralFreq = 0;
 		try
 		{
@@ -624,13 +637,13 @@ public class MainWindow implements GuiInterface
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",	JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",
+					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
-		
 		Boolean Loop = chckbxLoop.isSelected();
-		
+
 		client.SendPlayCommand(CentralFreq, getRate(), getGain(), Loop, getFilename(), TransmitExe);
 	}
 
@@ -650,7 +663,8 @@ public class MainWindow implements GuiInterface
 		if (cmbCenter.getSelectedIndex() != 0) // Center
 		{
 			f0 = (double) ((Integer) numCenter.getValue()) * 1e6;
-		} else
+		}
+		else
 		{
 			if ((Integer) numBAndwidth.getValue() > (Integer) numCenter.getValue())
 			{
@@ -664,7 +678,7 @@ public class MainWindow implements GuiInterface
 		}
 		return f0;
 	}
-	
+
 	private double getGain()
 	{
 		double Gain = -1; // Automatic;
@@ -684,13 +698,15 @@ public class MainWindow implements GuiInterface
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
+
 			public void run()
 			{
 				try
 				{
 					MainWindow window = new MainWindow();
 					window.f.setVisible(true);
-				} catch (Exception e)
+				}
+				catch (Exception e)
 				{
 					logger.error("Failed openinng main window", e);
 				}

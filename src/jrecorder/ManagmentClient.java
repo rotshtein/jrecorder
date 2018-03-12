@@ -19,16 +19,16 @@ import recorder_proto.Recorder.SpectrumCommand;
 import recorder_proto.Recorder.StatusMessage;
 import recorder_proto.Recorder.StatusReplay;
 
-
-class ManagementClient extends WebSocketClient 
+class ManagementClient extends WebSocketClient
 {
-	static Logger logger = Logger.getLogger("ManagementClient");
-	GuiInterface gui = null;
-	Boolean connectionStatus = false;
-	ManagementClient conn;
-	Boolean gotAck = false;
-	Boolean gotNck = false;
-	
+
+	static Logger		logger				= Logger.getLogger("ManagementClient");
+	GuiInterface		gui					= null;
+	Boolean				connectionStatus	= false;
+	ManagementClient	conn;
+	Boolean				gotAck				= false;
+	Boolean				gotNck				= false;
+
 	public ManagementClient(URI serverUri, GuiInterface gui)
 	{
 		super(serverUri);
@@ -48,6 +48,7 @@ class ManagementClient extends WebSocketClient
 	{
 		logger.info("got message: " + message);
 	}
+
 	@Override
 	public void onMessage(ByteBuffer buffer)
 	{
@@ -55,12 +56,12 @@ class ManagementClient extends WebSocketClient
 		try
 		{
 			h = Header.parseFrom(buffer);
-			
+
 			if (h != null)
 			{
 				logger.info("Got header. Command = " + h.getOpcode());
 			}
-			//int i = h.getOpcodeValue();
+			// int i = h.getOpcodeValue();
 			switch (h.getOpcode())
 			{
 			case HEADER:
@@ -68,70 +69,68 @@ class ManagementClient extends WebSocketClient
 				break;
 			case SPECTRUM:
 				logger.error("Got spectrum");
-				
+
 			case RECORD:
 				logger.error("Got spectrum");
 				break;
 
 			case PLAY_CMD:
 				logger.error("Got play");
-			
+
 			case STOP_CMD:
 				logger.error("Got Stop command");
 				break;
-				
+
 			case STATUS_REQUEST:
 				logger.error("Got Status request");
 				break;
-				
+
 			case ACK:
 				gotAck = true;
 				break;
-				
+
 			case NACK:
 				gotNck = true;
 				break;
-				
+
 			case STATUS_REPLAY:
-				StatusReplay sr = StatusReplay.parseFrom(h.getMessageData()); 
-				
+				StatusReplay sr = StatusReplay.parseFrom(h.getMessageData());
+
 				gui.UpdateStatus(sr.getStatusDescription());
-				
+
 				if (sr.getWarning())
 				{
 					gui.UpdateStatus(sr.getWarningMessage());
 				}
-				
+
 				if (sr.getError())
 				{
 					gui.UpdateStatus(sr.getErrorMMessage());
 				}
 				break;
-				
+
 			case STATUS_MESSAGE:
-				StatusMessage sm = StatusMessage.parseFrom(h.getMessageData()); 
+				StatusMessage sm = StatusMessage.parseFrom(h.getMessageData());
 				gui.UpdateStatus(sm.getMessage());
 				break;
-				
+
 			case CONNECTION_STATUS:
 				ConnectionStatus cs = ConnectionStatus.parseFrom(h.getMessageData());
 				connectionStatus = cs.getStatus();
 				gui.onConnectionChange(connectionStatus);
 				break;
 
-			
 			default:
 				logger.error("Unknown command.");
 				break;
 			}
-			
-			
+
 		}
 		catch (InvalidProtocolBufferException e)
 		{
-			logger.error("Protocol buffer Header parsing error",e);
+			logger.error("Protocol buffer Header parsing error", e);
 		}
-		
+
 	}
 
 	@Override
@@ -143,104 +142,72 @@ class ManagementClient extends WebSocketClient
 	@Override
 	public void onError(Exception ex)
 	{
-		logger.error("Wensocket error",ex);
+		logger.error("Wensocket error", ex);
 	}
 
 	public Boolean SendRecordCommand()
 	{
 		return false;
 	}
-	
-	
-	public Boolean SendSpectrumCommand(double CenterFrequncy,double Rate, double Gain, String SpectrumBin, String SpectrumExe)
+
+	public Boolean SendSpectrumCommand(double CenterFrequncy, double Rate, double Gain, String SpectrumBin,
+			String SpectrumExe)
 	{
-		SpectrumCommand s = SpectrumCommand.newBuilder()
-				.setApplicationExecute(SpectrumExe)
-				.setFilename(SpectrumBin)
-				.setGain(Gain)
-				.setFrequency(CenterFrequncy)
-				.setRate(Rate)
+		SpectrumCommand s = SpectrumCommand.newBuilder().setApplicationExecute(SpectrumExe).setFilename(SpectrumBin)
+				.setGain(Gain).setFrequency(CenterFrequncy).setRate(Rate).build();
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.SPECTRUM).setMessageData(s.toByteString())
 				.build();
-		Header h = Header.newBuilder()
-				.setSequence(0)
-				.setOpcode(OPCODE.SPECTRUM)
-				.setMessageData(s.toByteString())
-				.build();
-		
+
 		this.send(h.toByteArray());
 		return true;
 	}
-	
-	public Boolean SendPlayCommand(double CenterFrequncy,double Rate, double Gain, Boolean Loop, String Filename, String PlayExe)
+
+	public Boolean SendPlayCommand(double CenterFrequncy, double Rate, double Gain, Boolean Loop, String Filename,
+			String PlayExe)
 	{
-		PlayCommand p = PlayCommand.newBuilder()
-				.setFrequency(CenterFrequncy)
-				.setRate(Rate)
-				.setGain(Gain)
-				.setFilename(Filename)
-				.setApplicationExecute(PlayExe)
-				.setLoop(Loop)
+		PlayCommand p = PlayCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain)
+				.setFilename(Filename).setApplicationExecute(PlayExe).setLoop(Loop).build();
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.PLAY_CMD).setMessageData(p.toByteString())
 				.build();
-		Header h = Header.newBuilder()
-				.setSequence(0)
-				.setOpcode(OPCODE.PLAY_CMD)
-				.setMessageData(p.toByteString())
-				.build();
-		
+
 		this.send(h.toByteArray());
 		return true;
 	}
-	
-	public Boolean SendRecordCommand(double CenterFrequncy,double Rate, double Gain, String Filename, double NumberOfSampels, String RecordExe)
+
+	public Boolean SendRecordCommand(double CenterFrequncy, double Rate, double Gain, String Filename,
+			double NumberOfSampels, String RecordExe)
 	{
-		RecordCommand s = RecordCommand.newBuilder()
-				.setFrequency(CenterFrequncy)
-				.setRate(Rate)
-				.setGain(Gain)
-				.setFilename(Filename)
-				.setNumberOfSamples(NumberOfSampels)
-				.setApplicationExecute(RecordExe)
-				.build();
-		
-		Header h = Header.newBuilder()
-				.setSequence(0)
-				.setOpcode(OPCODE.RECORD)
-				.setMessageData(s.toByteString())
-				.build();
-		
+		RecordCommand s = RecordCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain)
+				.setFilename(Filename).setNumberOfSamples(NumberOfSampels).setApplicationExecute(RecordExe).build();
+
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.RECORD).setMessageData(s.toByteString()).build();
+
 		this.send(h.toByteArray());
 		return true;
 	}
-	
+
 	public Boolean SendStopCommand()
 	{
-		Header h = Header.newBuilder()
-				.setSequence(0)
-				.setOpcode(OPCODE.STOP_CMD)
-				.build();
-		
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.STOP_CMD).build();
+
 		this.send(h.toByteArray());
 		return true;
 	}
-	
+
 	public void Send(int Sequence, OPCODE opcode, ByteString data)
 	{
 		gotAck = false;
 		gotNck = false;
-		
-		Header h = Header.newBuilder()
-				.setSequence(Sequence)
-				.setOpcode(opcode)
-				.setMessageData(data)
-				.build();
-		
+
+		Header h = Header.newBuilder().setSequence(Sequence).setOpcode(opcode).setMessageData(data).build();
+
 		this.send(h.toByteArray());
 	}
-	
+
 	public Boolean WaitForAck(long milliseconds)
 	{
-		long Start = System.currentTimeMillis();  
-		
+		long Start = System.currentTimeMillis();
+
 		while (gotAck != true)
 		{
 			if (System.currentTimeMillis() - Start > milliseconds)
@@ -251,7 +218,7 @@ class ManagementClient extends WebSocketClient
 		}
 		return true;
 	}
-	
+
 	public Boolean isAck()
 	{
 		return gotAck;

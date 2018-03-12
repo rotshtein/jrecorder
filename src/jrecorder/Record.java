@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 
 public class Record extends Operation
 {
+
 	final static Logger logger = Logger.getLogger("Record");
 
 	public Record(String RecordExe, String messageFile, GuiInterface gui)
@@ -21,10 +22,12 @@ public class Record extends Operation
 			try
 			{
 				String vars[] =
-				{ super.exe_file, "--mode", "record", "--freq",Double.toString(f0), " --rate",Double.toString(Rate), "--gain", Double.toString(Gain),
-						"--file",Filename, "--nsamps", Double.toString(NumSamples), "--exe", super.exe_file};
+				{ super.exe_file, "--mode", "record", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
+						"--gain", Double.toString(Gain), "--file", Filename, "--nsamps", Double.toString(NumSamples),
+						"--exe", super.exe_file };
 				p = super.StartAction(vars);
-			} catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				throw ex;
 			}

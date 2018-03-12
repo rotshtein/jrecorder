@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 public class Parameters
 {
+
 	final static Logger	logger		= Logger.getLogger("Parameters");
 	File				configFile	= null;
 	Properties			props;
@@ -43,7 +44,8 @@ public class Parameters
 		try
 		{
 			value = props.getProperty(name);
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			logger.error("Failed to get parameter value", e);
 		}
@@ -54,7 +56,8 @@ public class Parameters
 			{
 				Set(name, defaultValue);
 				value = defaultValue;
-			} catch (IOException e)
+			}
+			catch (IOException e)
 			{
 				logger.error("Failed to set default parameter value", e);
 			}

@@ -28,6 +28,7 @@ import javax.swing.JScrollPane;
 
 public class SpectrumWindow
 {
+
 	final static Logger	logger	= Logger.getLogger("SpectrumWindow");
 	String				filename;
 	String				spectrun_exe;
@@ -65,7 +66,7 @@ public class SpectrumWindow
 					return;
 				}
 			}
-			
+
 			InputStream insputStream = new FileInputStream(file);
 			DataInputStream dIn = new DataInputStream(insputStream);
 			float x, y;
@@ -83,7 +84,8 @@ public class SpectrumWindow
 			/*
 			 * for (int i = 0; i < (1024*32); i++) { series1.add(i, i); }
 			 */
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			logger.error("Failed getting spectrum info", e);
 			return;
@@ -99,6 +101,7 @@ public class SpectrumWindow
 		final JFrame frame = new JFrame("Specturm");
 		frame.addWindowListener(new WindowAdapter()
 		{
+
 			@Override
 			public void windowClosing(WindowEvent arg0)
 			{
@@ -122,7 +125,8 @@ public class SpectrumWindow
 			OutputStream out = new FileOutputStream("c:\\d\\graph.png");
 			ChartUtilities.writeChartAsPNG(out, chart, frame.getWidth(), frame.getHeight());
 
-		} catch (IOException ex)
+		}
+		catch (IOException ex)
 		{
 			logger.error("Failed saving spectrum picture", ex);
 		}
@@ -143,7 +147,8 @@ public class SpectrumWindow
 				Thread t = new Thread(procMon);
 				t.start();
 
-			} catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				logger.error("Failed to start spectrum process", ex);
 				return null;

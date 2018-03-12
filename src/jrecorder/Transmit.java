@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 public class Transmit extends Operation
 {
+
 	final static Logger logger = Logger.getLogger("Transmit");
 
 	public Transmit(String TransmitExe, String messageFile, GuiInterface gui)
@@ -22,16 +23,16 @@ public class Transmit extends Operation
 			{
 				String LoopMode = Loop ? "--loop" : "";
 				String vars[] =
-				{ super.exe_file, "--mode", "play", "--freq",Double.toString(f0), " --rate", Double.toString(Rate), "--gain", Double.toString(Gain),
-						"--file", Filename, LoopMode, "--exe", super.exe_file };
+				{ super.exe_file, "--mode", "play", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
+						"--gain", Double.toString(Gain), "--file", Filename, LoopMode, "--exe", super.exe_file };
 				p = super.StartAction(vars);
-			} catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				throw ex;
 			}
 		}
 		return p;
 	}
-	
-	
+
 }
