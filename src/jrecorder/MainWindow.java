@@ -39,14 +39,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 
-import com.google.protobuf.AbstractMessage.Builder;
+
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import recorder_proto.Recorder.Header;
 import recorder_proto.Recorder.OPCODE;
 import recorder_proto.Recorder.PlayCommand;
 import recorder_proto.Recorder.RecordCommand;
-import recorder_proto.Recorder.STATUS;
 import recorder_proto.Recorder.SpectrumCommand;
 
 import javax.swing.SwingConstants;
@@ -687,8 +686,19 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+		
+		double CentralFreq = 0;
+		try
+		{
+			CentralFreq = getF0();
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",	JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
-		//client.SendRecordCommand()
+		client.SendRecordCommand(CentralFreq, getRate(),  getGain(), getFilename(), dNumSamples, RecorderExe);
 		/*
 		Record rec = new Record(RecorderExe, "./spectrum.txt", this);
 

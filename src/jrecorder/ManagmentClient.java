@@ -2,10 +2,6 @@ package jrecorder;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.time.LocalTime;
-import java.util.Date;
-
-import javax.print.attribute.standard.DateTimeAtCompleted;
 
 import org.apache.log4j.Logger;
 import org.java_websocket.client.WebSocketClient;
@@ -19,7 +15,6 @@ import recorder_proto.Recorder.Header;
 import recorder_proto.Recorder.OPCODE;
 import recorder_proto.Recorder.PlayCommand;
 import recorder_proto.Recorder.RecordCommand;
-import recorder_proto.Recorder.STATUS;
 import recorder_proto.Recorder.SpectrumCommand;
 import recorder_proto.Recorder.StatusMessage;
 import recorder_proto.Recorder.StatusReplay;
@@ -65,7 +60,7 @@ class ManagementClient extends WebSocketClient
 			{
 				logger.info("Got header. Command = " + h.getOpcode());
 			}
-			int i = h.getOpcodeValue();
+			//int i = h.getOpcodeValue();
 			switch (h.getOpcode())
 			{
 			case HEADER:
@@ -195,16 +190,17 @@ class ManagementClient extends WebSocketClient
 		return true;
 	}
 	
-	public Boolean SendRecordCommand(double CenterFrequncy, double bandwidth, double Rate, double Gain, double NumberOfSamples, String RecorderFile, String RecordExe)
+	public Boolean SendRecordCommand(double CenterFrequncy,double Rate, double Gain, String Filename, double NumberOfSampels, String RecordExe)
 	{
 		RecordCommand s = RecordCommand.newBuilder()
-				.setApplicationExecute(RecordExe)
-				.setFilename(RecorderFile)
-				.setGain(Gain)
 				.setFrequency(CenterFrequncy)
 				.setRate(Rate)
-				.setNumberOfSamples(NumberOfSamples)
+				.setGain(Gain)
+				.setFilename(Filename)
+				.setNumberOfSamples(NumberOfSampels)
+				.setApplicationExecute(RecordExe)
 				.build();
+		
 		Header h = Header.newBuilder()
 				.setSequence(0)
 				.setOpcode(OPCODE.RECORD)
