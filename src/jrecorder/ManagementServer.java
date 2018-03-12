@@ -12,18 +12,24 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
-public class ManagementServer extends WebSocketServer
+import recorder_proto.Recorder.ConnectionStatus;
+import recorder_proto.Recorder.Header;
+import recorder_proto.Recorder.OPCODE;
+
+public class ManagementServer extends WebSocketServer implements ConnectionInterface
 {
 	static Logger logger = Logger.getLogger("ManagementServer");
-	GuiInterface gui = null;
 	ManagmentParser parser = null;
+	CheckConnectivity 			connectivityThread;
 	BlockingQueue<AbstractMap.SimpleEntry<byte [], WebSocket>> queue = null;
+	Boolean connectionStatus = false;
 	 
-	public ManagementServer(InetSocketAddress address, GuiInterface gui)
+	public ManagementServer(InetSocketAddress address)  
 	{
 		super(address);
-		this.gui = gui;
-		
+		connectivityThread = new CheckConnectivity(this, "127.0.0.1");
+		Thread thread = new Thread(connectivityThread);
+		thread.start();
 		try
 		{
 			queue = new ArrayBlockingQueue<SimpleEntry<byte[], WebSocket>>(1);
@@ -35,7 +41,20 @@ public class ManagementServer extends WebSocketServer
 			logger.error("Parse error", e);
 		}
 	}
-
+	
+	public void Stop()
+	{
+		try
+		{
+			this.stop();
+		}
+		catch (Exception e)
+		{
+			logger.error("Error while closing Web socket server", e);
+		}
+		connectivityThread.Stop();
+	}
+	
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake)
 	{
@@ -77,12 +96,37 @@ public class ManagementServer extends WebSocketServer
 	@Override
 	public void onError(WebSocket conn, Exception ex)
 	{
-		System.err.println("an error occured on connection " + conn.getRemoteSocketAddress() + ":" + ex);
+		logger.error("an error occured on connection " ,ex);
 	}
 
 	@Override
 	public void onStart()
 	{
-		System.out.println("server started successfully");
+		logger.info("server started successfully");
+	}
+
+	@Override
+	public void onConnectionChange(Boolean Status)
+	{
+		connectionStatus = Status;
+		for (WebSocket conn : this.connections())
+		{
+			SendConnectionStatus(Status, conn);
+		}
+	}
+	
+	public void SendConnectionStatus(Boolean status, WebSocket conn)
+	{
+		ConnectionStatus cs = ConnectionStatus.newBuilder()
+				.setStatus(status)
+				.build();
+		
+		Header h = Header.newBuilder()
+				.setSequence(0)
+				.setOpcode(OPCODE.CONNECTION_STATUS)
+				.setMessageData(cs.toByteString())
+				.build();
+		
+		conn.send(h.toByteArray());
 	}
 }

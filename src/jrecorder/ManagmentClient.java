@@ -116,6 +116,7 @@ class ManagementClient extends WebSocketClient
 			case CONNECTION_STATUS:
 				ConnectionStatus cs = ConnectionStatus.parseFrom(h.getMessageData());
 				connectionStatus = cs.getStatus();
+				gui.onConnectionChange(connectionStatus);
 				break;
 
 			
@@ -170,14 +171,14 @@ class ManagementClient extends WebSocketClient
 		return true;
 	}
 	
-	public Boolean SendPlayCommand(double CenterFrequncy,double Rate, double Gain, Boolean Loop, String SpectrumBin, String SpectrumExe)
+	public Boolean SendPlayCommand(double CenterFrequncy,double Rate, double Gain, Boolean Loop, String Filename, String PlayExe)
 	{
 		PlayCommand p = PlayCommand.newBuilder()
-				.setApplicationExecute(SpectrumExe)
-				.setFilename(SpectrumBin)
-				.setGain(Gain)
 				.setFrequency(CenterFrequncy)
 				.setRate(Rate)
+				.setGain(Gain)
+				.setFilename(Filename)
+				.setApplicationExecute(PlayExe)
 				.setLoop(Loop)
 				.build();
 		Header h = Header.newBuilder()
@@ -205,6 +206,17 @@ class ManagementClient extends WebSocketClient
 				.setSequence(0)
 				.setOpcode(OPCODE.RECORD)
 				.setMessageData(s.toByteString())
+				.build();
+		
+		this.send(h.toByteArray());
+		return true;
+	}
+	
+	public Boolean SendStopCommand()
+	{
+		Header h = Header.newBuilder()
+				.setSequence(0)
+				.setOpcode(OPCODE.STOP_CMD)
 				.build();
 		
 		this.send(h.toByteArray());

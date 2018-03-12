@@ -23,10 +23,8 @@ public class Transmit extends Operation
 				String LoopMode = Loop ? "--loop" : "";
 				String vars[] =
 				{ super.exe_file, "--mode", "play", "--freq",Double.toString(f0), " --rate", Double.toString(Rate), "--gain", Double.toString(Gain),
-						"--file", Filename, LoopMode };
+						"--file", Filename, LoopMode, "--exe", super.exe_file };
 				p = super.StartAction(vars);
-				
-				
 			} catch (Exception ex)
 			{
 				throw ex;

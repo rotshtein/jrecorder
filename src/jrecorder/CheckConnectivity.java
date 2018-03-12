@@ -9,11 +9,11 @@ import org.apache.log4j.Logger;
 public class CheckConnectivity implements Runnable
 {
 	final static Logger	logger	= Logger.getLogger("CheckConnectivity");
-	GuiInterface		_gui	= null;
+	ConnectionInterface	_gui	= null;
 	InetAddress			inet;
 	Boolean				_run	= true;
 
-	public CheckConnectivity(GuiInterface gui, String host)
+	public CheckConnectivity(ConnectionInterface gui, String host)
 	{
 		_gui = gui;
 		try

@@ -40,14 +40,6 @@ import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
-import recorder_proto.Recorder.Header;
-import recorder_proto.Recorder.OPCODE;
-import recorder_proto.Recorder.PlayCommand;
-import recorder_proto.Recorder.RecordCommand;
-import recorder_proto.Recorder.SpectrumCommand;
-
 import javax.swing.SwingConstants;
 
 public class MainWindow implements GuiInterface
@@ -88,9 +80,7 @@ public class MainWindow implements GuiInterface
 	private JLabel				lblLed;
 	private final JPanel		pnlLed				= new JPanel();
 	private Parameters			param;
-	private ProcMon				procMon				= null;
 	private ManagementServer 	server;
-	CheckConnectivity 			connectivityThread;
 	private ManagementClient 	client;
 
 	@SuppressWarnings(
@@ -406,79 +396,12 @@ public class MainWindow implements GuiInterface
 
 		txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
 
-		connectivityThread = new CheckConnectivity(this, "127.0.0.1");
-		Thread thread = new Thread(connectivityThread);
-		thread.start();
+		
 		
 		String host = param.Get("ListenAddress", "127.0.0.1");
 		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
 
-		RecordCommand  m = RecordCommand.newBuilder() 
-				.setFilename("./recorded.dat")
-				.setFrequency(1000*10e6)
-				.setGain(2.3)
-				.setNumberOfSamples(10e10)
-				.setRate(10e6)
-				.build();
-	
-		Header h = Header.newBuilder().setOpcode(OPCODE.RECORD).setMessageData(m.toByteString()).build();
-		  
-		byte [] buffer = m.toByteArray();
-		
-		Header hh = null;
-		
-		try
-		{
-			hh = Header.parseFrom(buffer);
-		}
-		catch (InvalidProtocolBufferException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		OPCODE i = hh.getOpcode();
-		if ( i == OPCODE.RECORD)
-		{
-			RecordCommand rr = null;
-			try
-			{
-				rr = RecordCommand.parseFrom(h.getMessageData());
-			}
-			catch (InvalidProtocolBufferException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
-		else if (i == OPCODE.PLAY_CMD)
-		{
-			PlayCommand rr = null;
-			try
-			{
-				rr = PlayCommand.parseFrom(h.getMessageData());
-			}
-			catch (InvalidProtocolBufferException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		else if (i == OPCODE.SPECTRUM)
-		{
-			SpectrumCommand rr = null;
-			try
-			{
-				rr = SpectrumCommand.parseFrom(h.getMessageData());
-			}
-			catch (InvalidProtocolBufferException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
-		server = new ManagementServer(new InetSocketAddress(host, port), this);
+		server = new ManagementServer(new InetSocketAddress(host, port));
 		server.start();
 		
 		try
@@ -494,24 +417,11 @@ public class MainWindow implements GuiInterface
 	private void Stop()
 	{
 		StopCurrentProcess();
-		connectivityThread.Stop();
 	}
 
 	private void StopCurrentProcess()
 	{
-
-		if (procMon == null)
-		{
-			UpdateStatus("Process not running");
-			return;
-		}
-
-		if (!procMon.isComplete())
-		{
-			logger.warn("Killing process. [ " + procMon.description + " ]");
-			UpdateStatus("Killing process. [ " + procMon.description + " ]");
-			procMon.kill();
-		}
+		client.SendStopCommand();
 	}
 
 	public void onConnectionChange(final Boolean status)
@@ -565,20 +475,6 @@ public class MainWindow implements GuiInterface
 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address",
 					"Spectrum", JOptionPane.ERROR_MESSAGE);
 			return;
-		}
-
-		if (procMon != null)
-		{
-			if (!procMon.isComplete())
-			{
-				int dialogButton = JOptionPane.YES_NO_OPTION;
-				JOptionPane.showMessageDialog(f, "Process already running [" + procMon.description
-						+ "]. Do you want to stop the current process?", "Spectrum", dialogButton);
-				if (dialogButton == JOptionPane.NO_OPTION)
-				{
-					return;
-				}
-			}
 		}
 
 		if (cmbCenter.getSelectedIndex() != 0) // Center
@@ -640,20 +536,6 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		if (procMon != null)
-		{
-			if (!procMon.isComplete())
-			{
-				int dialogButton = JOptionPane.YES_NO_OPTION;
-				JOptionPane.showMessageDialog(f, "Process already running [" + procMon.description
-						+ "]. Do you want to stop the current process?", "Record", dialogButton);
-				if (dialogButton == JOptionPane.NO_OPTION)
-				{
-					return;
-				}
-			}
-		}
-
 		double dNumSamples = 0;
 		double Val = (double) (Integer) numFileSize.getValue();
 		switch (cmbFileSize.getSelectedIndex())
@@ -699,26 +581,11 @@ public class MainWindow implements GuiInterface
 		}
 
 		client.SendRecordCommand(CentralFreq, getRate(),  getGain(), getFilename(), dNumSamples, RecorderExe);
-		/*
-		Record rec = new Record(RecorderExe, "./spectrum.txt", this);
-
-		try
-		{
-			procMon = rec.Start(getF0(), getRate(), getGain(), getFilename(), dNumSamples);
-			UpdateStatus("Starting to record ....");
-			logger.info("Starting to record");
-		} catch (Exception e)
-		{
-			JOptionPane.showMessageDialog(f, "Error while Recording:" + e.getMessage(), "Record",
-					JOptionPane.ERROR_MESSAGE);
-			UpdateStatus("Error while recording: " + e.getMessage());
-		}*/
+		
 	}
 
 	private void Transmit()
 	{
-		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
-
 		if (!_connectionStatus)
 		{
 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address",
@@ -734,37 +601,37 @@ public class MainWindow implements GuiInterface
 
 		}
 		
-		if (procMon != null)
+		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
+
+		if (!new File(TransmitExe).exists())
 		{
-			if (!procMon.isComplete())
-			{
-				int dialogButton = JOptionPane.YES_NO_OPTION;
-				JOptionPane.showMessageDialog(f, "Process already running [" + procMon.description
-						+ "]. Do you want to stop the current process?", "Transmit", dialogButton);
-				if (dialogButton == JOptionPane.NO_OPTION)
-				{
-					return;
-				}
-			}
+			JOptionPane.showMessageDialog(f, "Recorder exec not found. Please fix the configuration file", "Rercord",
+					JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 
-		Boolean Loop = chckbxLoop.isSelected();
-
-		Transmit tx = new Transmit(TransmitExe, "./spectrum.txt", this);
-
+		if (getFilename() == "")
+		{
+			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		double CentralFreq = 0;
 		try
 		{
-			procMon = tx.Start(getF0(), getRate(), getGain(), getFilename(), Loop);
-			UpdateStatus("Starting to transmit ....");
-			logger.info("Starting to transmit");
-			//tx.start();
-		} catch (Exception e)
+			CentralFreq = getF0();
+		}
+		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(f, "Error while Transmiting:" + e.getMessage(), "Transmit",
-					JOptionPane.ERROR_MESSAGE);
-			UpdateStatus("Error while transmiting: " + e.getMessage());
+			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",	JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 
+		
+		Boolean Loop = chckbxLoop.isSelected();
+		
+		client.SendPlayCommand(CentralFreq, getRate(), getGain(), Loop, getFilename(), TransmitExe);
 	}
 
 	public void OperationCompleted()
@@ -797,13 +664,7 @@ public class MainWindow implements GuiInterface
 		}
 		return f0;
 	}
-	/*
-	 * private double getBW() { double bw; if (cmbCenter.getSelectedIndex() != 0) //
-	 * Center { bw = (double)((Integer)numBAndwidth.getValue()) * 1e6; } else { bw =
-	 * (Integer)numCenter.getValue() - (Integer)numBAndwidth.getValue(); } return
-	 * bw; }
-	 */
-
+	
 	private double getGain()
 	{
 		double Gain = -1; // Automatic;

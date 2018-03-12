@@ -91,23 +91,12 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 				return;
 			}
-
+			
 			SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
-
+			Kill();
 			procMon = sw.GetMessurment(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
-			/*
-			try
-			{
-				sw.Show(s.getFilename());
-				SendStatusMessage("Showing spectrum ....", conn);
-			} catch (FileNotFoundException e)
-			{
-				//JOptionPane.showMessageDialog(f, "Error while building spectrum.", "Spectrum", JOptionPane.ERROR_MESSAGE);
-				SendStatusMessage("Error while Showing spectrum",conn);
-				logger.error("Error while Showing spectrum");
-				SendNck(h, conn);
-			}*/
 			SendAck(h,conn);
+			
 		break;
 		
 		case RECORD:
@@ -121,19 +110,18 @@ public class ManagmentParser extends Thread implements GuiInterface
 				logger.error("Failed to parse RecordCommand", e);
 				SendNck(h, conn);
 			}
-			//super.exe_file, "--mode", "record", "--freq",Double.toString(f0), " --rate",Double.toString(Rate), "--gain", Double.toString(Gain),
-			//"--file",Filename, "--nsamps", Double.toString(NumSamples) };
 			
 			Record rec = new Record(r.getApplicationExecute(), "./spectrum.txt", this);
 			try
 			{
+				Kill();				
 				procMon = rec.Start(r.getFrequency(), r.getRate(), r.getGain(), r.getFilename(), r.getNumberOfSamples());
-				SendStatusMessage("Spectrum exec not found. Please fix the configuration file", conn);
+				SendStatusMessage("Starting to record to " +  r.getFilename(), conn);
 				logger.info("Starting to record");
 				SendAck(h,conn);
 			} catch (Exception e)
 			{
-				SendStatusMessage("Spectrum exec not found. Please fix the configuration file", conn);
+				SendStatusMessage("Record exec not found. Please fix the configuration file", conn);
 				logger.error("Spectrum exec not found. Please fix the configuration file,e");
 			}
 			SendNck(h,conn);
@@ -156,21 +144,41 @@ public class ManagmentParser extends Thread implements GuiInterface
 			Transmit tx = new Transmit(p.getApplicationExecute(), "./spectrum.txt", this);
 			try
 			{
-				//double f0, double Rate, double Gain, String Filename, Boolean Loop
+				Kill();
 				procMon = tx.Start(p.getFrequency(), p.getRate(), p.getGain(), p.getFilename(),p.getLoop());
-				SendStatusMessage("Spectrum exec not found. Please fix the configuration file", conn);
+				SendStatusMessage("Starting to transmirt " +  p.getFilename(), conn);
 				logger.info("Starting to record");
 				SendAck(h,conn);
-			} catch (Exception e)
+				OperationStarted();
+			} 
+			catch (Exception e)
 			{
 				SendStatusMessage("Spectrum exec not found. Please fix the configuration file", conn);
 				logger.error("Spectrum exec not found. Please fix the configuration file,e");
+				SendNck(h,conn);
 			}
-			SendNck(h,conn);
+			
 			break;
 			
 		case STOP_CMD:
 			SendAck(h,conn);
+			if (procMon == null)
+			{
+				SendStatusMessage("Process not running", conn);
+				return;
+			}
+
+			if (!procMon.isComplete())
+			{
+				logger.warn("Killing process. [ " + procMon.description + " ]");
+				SendStatusMessage("Killing process. [ " + procMon.description + " ]",conn);
+				procMon.kill();
+				OperationCompleted();
+			}
+			else
+			{
+				SendStatusMessage("Process not running", conn);
+			}
 			break;
 			
 		case STATUS_REQUEST:
@@ -276,19 +284,17 @@ public class ManagmentParser extends Thread implements GuiInterface
 	
 	public void Kill()
 	{
+		if (procMon == null)
+		{
+			return;
+		}
 		
+		if (!procMon.isComplete())
+		{
+			procMon.kill();
+		}
 	}
-	/*
-	MANAGMENT_STATUS last_status;
-	Boolean errorCondition = false;
-	String errorMessahe = "";
-	Boolean warnCondition = false;
-	String warnMessahe = "";
-	double playedSamples = 0;
-	double recordedSamples = 0;
-	double errorSamples = 0;
-	WebSocket webConnection = null;
-	*/
+	
 	@Override
 	public void onConnectionChange(Boolean status)
 	{
@@ -313,6 +319,14 @@ public class ManagmentParser extends Thread implements GuiInterface
 	@Override
 	public void OperationCompleted()
 	{
+		for (WebSocket conn : server.connections())
+		{
+			OperationCompleted(conn);
+		}
+	}
+
+	public void OperationCompleted(WebSocket conn)
+	{
 		StatusReplay s = StatusReplay.newBuilder()
 				.setStatus(STATUS.STOP)
 				.build();
@@ -322,10 +336,29 @@ public class ManagmentParser extends Thread implements GuiInterface
 				.setMessageData(s.toByteString())
 				.build();
 		
+		conn.send(h.toByteArray());
+	}
+
+	public void OperationStarted()
+	{
 		for (WebSocket conn : server.connections())
 		{
-			conn.send(h.toByteArray());
+			OperationStarted(conn);
 		}
+	}
+	
+	public void OperationStarted(WebSocket conn)
+	{
+		StatusReplay s = StatusReplay.newBuilder()
+				.setStatus(STATUS.RUN)
+				.build();
+		Header h = Header.newBuilder()
+				.setSequence(0)
+				.setOpcode(OPCODE.STATUS_REPLAY)
+				.setMessageData(s.toByteString())
+				.build();
+		
+		conn.send(h.toByteArray());
 	}
 	/*
 	public void setConnection(WebSocket conn)
