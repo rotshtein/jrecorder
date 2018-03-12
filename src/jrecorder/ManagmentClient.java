@@ -183,7 +183,7 @@ class ManagementClient extends WebSocketClient
 				.build();
 		Header h = Header.newBuilder()
 				.setSequence(0)
-				.setOpcode(OPCODE.SPECTRUM)
+				.setOpcode(OPCODE.PLAY_CMD)
 				.setMessageData(p.toByteString())
 				.build();
 		
