@@ -129,12 +129,12 @@ public class MainWindow implements GuiInterface
 			{
 				if (event.getItem().toString().equals(cmbAgc.getItemAt(0).toString()))
 				{
-					txtStatus.setText("Automatic AGC");
+					//txtStatus.setText("Automatic AGC");
 					numAgc.setEnabled(false);
 				}
 				else
 				{
-					txtStatus.setText("Manual AGC");
+					//txtStatus.setText("Manual AGC");
 					numAgc.setEnabled(true);
 				}
 			}
