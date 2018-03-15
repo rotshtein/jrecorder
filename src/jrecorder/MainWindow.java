@@ -46,6 +46,20 @@ import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 
+class StatusBar extends JLabel {
+    
+    /** Creates a new instance of StatusBar */
+    public StatusBar() {
+        super();
+        super.setPreferredSize(new Dimension(100, 16));
+        setMessage("Ready");
+    }
+     
+    public void setMessage(String message) {
+        setText(" "+message);        
+    }        
+}
+
 public class MainWindow implements GuiInterface
 {
 
@@ -60,7 +74,7 @@ public class MainWindow implements GuiInterface
 	private final JButton		btnRecord			= new JButton("Record");
 	private final JButton		btnTransmit			= new JButton("Transmit");
 	private final JCheckBox		chckbxLoop			= new JCheckBox("Loop");
-	private final JTextField	txtStatus			= new JTextField();
+	private final JLabel		txtStatus			= new JLabel();
 	private final JButton		btnStop				= new JButton("Stop");
 	private final JPanel		pnlFrequency		= new JPanel();
 	@SuppressWarnings("rawtypes")
@@ -90,6 +104,8 @@ public class MainWindow implements GuiInterface
 	private final JPanel pnlRate = new JPanel();
 	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbRate = new JComboBox();
+	
+	StatusBar statusBar;
 
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -138,12 +154,12 @@ public class MainWindow implements GuiInterface
 			{
 				if (event.getItem().toString().equals(cmbAgc.getItemAt(0).toString()))
 				{
-					//txtStatus.setText("Automatic AGC");
+					txtStatus.setText("Automatic AGC");
 					numAgc.setEnabled(false);
 				}
 				else
 				{
-					//txtStatus.setText("Manual AGC");
+					txtStatus.setText("Manual AGC");
 					numAgc.setEnabled(true);
 				}
 			}
@@ -394,11 +410,18 @@ public class MainWindow implements GuiInterface
 
 		txtStatus.setBackground(SystemColor.text);
 		txtStatus.setForeground(SystemColor.textText);
-		txtStatus.setSize(new Dimension(487, 444));
-		txtStatus.setEditable(false);
+		txtStatus.setSize(new Dimension(f.getWidth(), 444));
 		txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
-		txtStatus.setBounds(0, 539, 481, 30);
-		f.getContentPane().add(txtStatus);
+		//txtStatus.setBounds(0, f.getHeight()-35, f.getWidth(), 444);
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			txtStatus.setBounds(10, f.getBounds().getSize().height-50, f.getBounds().getSize().width, 30);
+		}
+		else
+		{
+			txtStatus.setBounds(10, f.getBounds().getSize().height-30, f.getBounds().getSize().width, 30);
+		}
+		f.getContentPane().add(txtStatus);//, java.awt.BorderLayout.SOUTH);
 		pnlRate.setLayout(null);
 		pnlRate.setName("");
 		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
@@ -413,7 +436,11 @@ public class MainWindow implements GuiInterface
 		cmbRate.setBounds(10, 28, 185, 23);
 		
 		pnlRate.add(cmbRate);
-
+		
+		//statusBar = new StatusBar();
+		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
+		
+		//statusBar.setText("Hello statusbar");
 	}
 
 	private void Init()
