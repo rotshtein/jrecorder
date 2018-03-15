@@ -13,8 +13,11 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,6 +43,8 @@ import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 
 import javax.swing.SwingConstants;
+import javax.swing.border.TitledBorder;
+import javax.swing.border.EtchedBorder;
 
 public class MainWindow implements GuiInterface
 {
@@ -82,6 +87,9 @@ public class MainWindow implements GuiInterface
 	private Parameters			param;
 	private ManagementServer	server;
 	private ManagementClient	client;
+	private final JPanel pnlRate = new JPanel();
+	@SuppressWarnings("rawtypes")
+	private final JComboBox cmbRate = new JComboBox();
 
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -89,6 +97,7 @@ public class MainWindow implements GuiInterface
 	{
 
 		f = new JFrame("Main Windows");
+		f.getContentPane().setLocation(0, -208);
 		f.addWindowListener(new WindowAdapter()
 		{
 
@@ -107,7 +116,7 @@ public class MainWindow implements GuiInterface
 				System.exit(0);
 			}
 		});
-		f.setSize(new Dimension(487, 523));
+		f.setSize(new Dimension(487, 609));
 		f.setType(Type.UTILITY);
 		f.setResizable(false);
 		f.setTitle("RF Recorder");
@@ -211,7 +220,7 @@ public class MainWindow implements GuiInterface
 			}
 		});
 		btnSpectrum.setFont(new Font("Arial", Font.BOLD, 14));
-		btnSpectrum.setBounds(10, 385, 125, 23);
+		btnSpectrum.setBounds(10, 475, 125, 23);
 
 		f.getContentPane().add(btnSpectrum);
 		btnRecord.setFont(new Font("Arial", Font.BOLD, 14));
@@ -224,7 +233,7 @@ public class MainWindow implements GuiInterface
 				Record();
 			}
 		});
-		btnRecord.setBounds(145, 385, 103, 23);
+		btnRecord.setBounds(147, 475, 103, 23);
 
 		f.getContentPane().add(btnRecord);
 		btnTransmit.addActionListener(new ActionListener()
@@ -237,12 +246,12 @@ public class MainWindow implements GuiInterface
 		});
 		btnTransmit.setEnabled(false);
 		btnTransmit.setFont(new Font("Arial", Font.BOLD, 14));
-		btnTransmit.setBounds(283, 384, 103, 23);
+		btnTransmit.setBounds(289, 475, 103, 23);
 
 		f.getContentPane().add(btnTransmit);
 		chckbxLoop.setEnabled(false);
 		chckbxLoop.setFont(new Font("Arial", Font.PLAIN, 14));
-		chckbxLoop.setBounds(392, 385, 71, 23);
+		chckbxLoop.setBounds(398, 475, 71, 23);
 
 		f.getContentPane().add(chckbxLoop);
 		btnStop.addActionListener(new ActionListener()
@@ -255,7 +264,7 @@ public class MainWindow implements GuiInterface
 		});
 
 		btnStop.setFont(new Font("Arial", Font.BOLD, 14));
-		btnStop.setBounds(366, 429, 103, 23);
+		btnStop.setBounds(366, 505, 103, 23);
 
 		f.getContentPane().add(btnStop);
 		pnlFrequency.setFont(new Font("Arial", Font.BOLD, 14));
@@ -316,7 +325,7 @@ public class MainWindow implements GuiInterface
 		pnlFileSize.setName("AGC");
 		pnlFileSize.setFont(new Font("Arial", Font.BOLD, 14));
 		pnlFileSize.setBorder(BorderFactory.createTitledBorder("File Size"));
-		pnlFileSize.setBounds(10, 258, 459, 106);
+		pnlFileSize.setBounds(10, 335, 459, 106);
 
 		f.getContentPane().add(pnlFileSize);
 		cmbFileSize.setModel(new DefaultComboBoxModel(new String[]
@@ -388,8 +397,22 @@ public class MainWindow implements GuiInterface
 		txtStatus.setSize(new Dimension(487, 444));
 		txtStatus.setEditable(false);
 		txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
-		txtStatus.setBounds(0, 491, 481, 30);
+		txtStatus.setBounds(0, 539, 481, 30);
 		f.getContentPane().add(txtStatus);
+		pnlRate.setLayout(null);
+		pnlRate.setName("");
+		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
+		pnlRate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rate [MHz]", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		pnlRate.setBounds(10, 258, 459, 66);
+		
+		f.getContentPane().add(pnlRate);
+		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "100", "84.6", "42.3", "21.15", "11"}));
+		cmbRate.setToolTipText("Set the sampling rate in MHz");
+		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
+		cmbRate.setBackground(Color.WHITE);
+		cmbRate.setBounds(10, 28, 185, 23);
+		
+		pnlRate.add(cmbRate);
 
 	}
 
@@ -514,9 +537,8 @@ public class MainWindow implements GuiInterface
 		}
 
 		String SpectrumBin = param.Get("SpectrumBin", "Spectrum.dat");
-		double Rate = Double.parseDouble(param.Get("Rate", "100e6"));
 
-		client.SendSpectrumCommand(CenterFrequncy, Rate, Gain, SpectrumBin, SpectrumExe);
+		client.SendSpectrumCommand(CenterFrequncy, getRate(), Gain, SpectrumBin, SpectrumExe);
 
 		if (client.WaitForAck(1000) == false)
 		{
@@ -547,13 +569,14 @@ public class MainWindow implements GuiInterface
 					"Record", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-
+		
+		double Rate = getRate();
 		double dNumSamples = 0;
 		double Val = (double) (Integer) numFileSize.getValue();
 		switch (cmbFileSize.getSelectedIndex())
 		{
 		case 0: // Time
-			dNumSamples = Math.ceil(Val * getRate());
+			dNumSamples = Math.ceil(Val * Rate);
 			break;
 
 		case 1:
@@ -593,7 +616,7 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		client.SendRecordCommand(CentralFreq, getRate(), getGain(), getFilename(), dNumSamples, RecorderExe);
+		client.SendRecordCommand(CentralFreq, Rate, getGain(), getFilename(), dNumSamples, RecorderExe);
 
 	}
 
@@ -643,18 +666,23 @@ public class MainWindow implements GuiInterface
 		}
 
 		Boolean Loop = chckbxLoop.isSelected();
-
-		client.SendPlayCommand(CentralFreq, getRate(), getGain(), Loop, getFilename(), TransmitExe);
+		
+		double Rate = getRate(getFilename());
+		if (Rate == 0)
+		{
+			Rate = getRate();
+		}
+		else
+		{
+			cmbRate.setSelectedItem(Rate);
+		}
+		
+		client.SendPlayCommand(CentralFreq, Rate, getGain(), Loop, getFilename(), TransmitExe);
 	}
 
 	public void OperationCompleted()
 	{
 
-	}
-
-	private double getRate()
-	{
-		return Double.parseDouble(param.Get("Rate", "50e6"));
 	}
 
 	private double getF0() throws Exception
@@ -688,7 +716,46 @@ public class MainWindow implements GuiInterface
 		}
 		return Gain;
 	}
+	
+	private double getRate()
+	{
+		double Rate = Double.parseDouble(cmbRate.getSelectedItem().toString());
+		Rate = Rate * 1e6;
+		try
+		{
+			param.Set("Rate", Double.toString(Rate));
+		}
+		catch (IOException e)
+		{
+			logger.error("Error while converting Rate to string to save in param file",e);
+		}
+		return Rate;
+	}
 
+	private double getRate(String Filename)
+	{
+		double Rate = 0;
+		try
+		{
+			FileInputStream is = new FileInputStream (Filename);
+			DataInputStream din = new DataInputStream(is);
+			
+			// Check magic key
+			
+			// Read the rate as float/double
+			Rate = din.readDouble();
+			
+			din.close();
+			is.close();
+		}
+		catch (Exception e)		
+		{
+			logger.error("Error extracting Rate from the samples transmit file",e);
+		}
+		
+		return Rate;
+	}
+	
 	private String getFilename()
 	{
 		return txtFileName.getText();
@@ -713,5 +780,4 @@ public class MainWindow implements GuiInterface
 			}
 		});
 	}
-
 }
