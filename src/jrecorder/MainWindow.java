@@ -68,7 +68,6 @@ public class MainWindow implements GuiInterface
 	private final JButton		btnRecord			= new JButton("Record");
 	private final JButton		btnTransmit			= new JButton("Transmit");
 	private final JCheckBox		chckbxLoop			= new JCheckBox("Loop");
-	private final JLabel		txtStatus			= new JLabel();
 	private final JButton		btnStop				= new JButton("Stop");
 	private final JPanel		pnlFrequency		= new JPanel();
 	@SuppressWarnings("rawtypes")
@@ -98,6 +97,8 @@ public class MainWindow implements GuiInterface
 	private final JPanel pnlRate = new JPanel();
 	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbRate = new JComboBox();
+	private final JPanel panel = new JPanel();
+	private final JLabel txtStatus = new JLabel("Statusbar");
 	
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -398,11 +399,6 @@ public class MainWindow implements GuiInterface
 		lblLed.setBounds(404, 13, 25, 25);
 		f.getContentPane().add(lblLed);
 		lblLed.setIcon(Red_icon);
-
-		txtStatus.setBackground(SystemColor.text);
-		txtStatus.setForeground(SystemColor.textText);
-		txtStatus.setSize(new Dimension(f.getWidth(), 444));
-		txtStatus.setFont(new Font("Arial", Font.PLAIN, 14));
 		//txtStatus.setBounds(0, f.getHeight()-35, f.getWidth(), 444);
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
@@ -412,7 +408,6 @@ public class MainWindow implements GuiInterface
 		{
 			txtStatus.setBounds(10, f.getBounds().getSize().height-30, f.getBounds().getSize().width, 30);
 		}
-		f.getContentPane().add(txtStatus);//, java.awt.BorderLayout.SOUTH);
 		pnlRate.setLayout(null);
 		pnlRate.setName("");
 		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
@@ -420,13 +415,19 @@ public class MainWindow implements GuiInterface
 		pnlRate.setBounds(10, 258, 459, 66);
 		
 		f.getContentPane().add(pnlRate);
+		cmbRate.setBounds(10, 32, 181, 23);
+		pnlRate.add(cmbRate);
 		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "100", "84.6", "42.3", "21.15", "11"}));
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
-		cmbRate.setBounds(10, 28, 185, 23);
+		panel.setBounds(0, 553, 481, 27);
 		
-		pnlRate.add(cmbRate);
+		f.getContentPane().add(panel);
+		panel.setLayout(null);
+		txtStatus.setBounds(0, 0, 481, 27);
+		
+		panel.add(txtStatus);
 		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
