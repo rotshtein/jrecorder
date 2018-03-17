@@ -7,5 +7,5 @@ public interface GuiInterface
 
 	void UpdateStatus(final String status);
 
-	void OperationCompleted();
+	//void OperationCompleted();
 }
