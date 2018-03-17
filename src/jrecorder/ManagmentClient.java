@@ -145,8 +145,6 @@ class ManagementClient extends WebSocketClient
 			case STATUS_REPLAY:
 				StatusReplay sr = StatusReplay.parseFrom(h.getMessageData());
 
-				gui.UpdateStatus(sr.getStatusDescription());
-
 				if (sr.getWarning())
 				{
 					gui.UpdateStatus(sr.getWarningMessage());
@@ -156,6 +154,14 @@ class ManagementClient extends WebSocketClient
 				{
 					gui.UpdateStatus(sr.getErrorMMessage());
 				}
+				
+				String message = sr.getStatusDescription();
+				
+				if (message != null)
+				{
+					gui.UpdateStatus(message);
+				}
+
 				break;
 
 			case STATUS_MESSAGE:

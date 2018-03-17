@@ -28,6 +28,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 	ProcMon														procMon				= null;
 	Boolean														connectionStatus	= false;
 	BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>>	queue				= null;
+	
 
 	public ManagmentParser(String ParametersFile, BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>> queue,
 			ManagementServer server) throws Exception
@@ -99,7 +100,8 @@ public class ManagmentParser extends Thread implements GuiInterface
 			Kill();
 			procMon = sw.GetMessurment(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
 			SendAck(h, conn);
-			UpdateStatus("Specturm process started...");
+			
+			OperationStarted("Specturm process started");
 
 			break;
 
@@ -117,7 +119,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 
 			if (!new File(r.getApplicationExecute()).exists())
 			{
-				SendStatusMessage("Recorder exec not found. Please fix the configuration file", conn);
+				OperationCompleted("Recorder exec not found. Please fix the configuration file", conn);
 				SendNck(h, conn);
 				return;
 			}
@@ -128,14 +130,14 @@ public class ManagmentParser extends Thread implements GuiInterface
 				Kill();
 				procMon = rec.Start(r.getFrequency(), r.getRate(), r.getGain(), r.getFilename(),
 						r.getNumberOfSamples());
-				UpdateStatus("Starting to record to " + r.getFilename());
+				OperationStarted(procMon.description + " Started");
 				logger.info("Starting to record");
 				
 				SendAck(h, conn);
 			}
 			catch (Exception e)
 			{
-				SendStatusMessage("Record exec not found. Please fix the configuration file", conn);
+				OperationCompleted("Record exec not found. Please fix the configuration file", conn);
 				logger.error("Spectrum exec not found. Please fix the configuration file,e");
 				SendNck(h, conn);
 			}
@@ -155,14 +157,14 @@ public class ManagmentParser extends Thread implements GuiInterface
 
 			if (!new File(p.getApplicationExecute()).exists())
 			{
-				SendStatusMessage("Transmit exec not found. Please fix the configuration file", conn);
+				OperationCompleted("Transmit exec not found. Please fix the configuration file", conn);
 				SendNck(h, conn);
 				return;
 			}
 
 			if (p.getFilename() == "" | !(new File(p.getFilename()).exists()))
 			{
-				SendStatusMessage("Transmit data file not found. Please spcify filename", conn);
+				OperationCompleted("Transmit data file not found. Please spcify filename", conn);
 				SendNck(h, conn);
 				return;
 			}
@@ -174,12 +176,11 @@ public class ManagmentParser extends Thread implements GuiInterface
 				procMon = tx.Start(p.getFrequency(), p.getRate(), p.getGain(), p.getFilename(), p.getLoop());
 				UpdateStatus("Starting to transmirt " + p.getFilename());
 				logger.info("Starting to record");
-				SendAck(h, conn);
-				OperationStarted();
+				OperationStarted(procMon.description + " Started");
 			}
 			catch (Exception e)
 			{
-				SendStatusMessage("Spectrum exec not found. Please fix the configuration file", conn);
+				OperationCompleted("Spectrum exec not found. Please fix the configuration file", conn);
 				logger.error("Spectrum exec not found. Please fix the configuration file,e");
 				SendNck(h, conn);
 			}
@@ -199,11 +200,11 @@ public class ManagmentParser extends Thread implements GuiInterface
 				logger.warn("Killing process. [ " + procMon.description + " ]");
 				UpdateStatus("Killing process. [ " + procMon.description + " ]");
 				procMon.kill();
-				OperationCompleted();
+				OperationCompleted(procMon.description + " stoped by operator");
 			}
 			else
 			{
-				SendStatusMessage("Process not running", conn);
+				OperationCompleted("Process not running", conn);
 			}
 			break;
 
@@ -317,35 +318,52 @@ public class ManagmentParser extends Thread implements GuiInterface
 		}
 	}
 
-	@Override
-	public void OperationCompleted()
+	
+	public void OperationCompleted(String message)
 	{
 		for (WebSocket conn : server.connections())
 		{
-			OperationCompleted(conn);
+			OperationCompleted(message, conn);
 		}
 	}
 
-	public void OperationCompleted(WebSocket conn)
+	public void OperationCompleted(String message, WebSocket conn)
 	{
-		StatusReplay s = StatusReplay.newBuilder().setStatus(STATUS.STOP).build();
+		StatusReplay s = StatusReplay.newBuilder().setStatus(STATUS.STOP).setStatusDescription(message).build();
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.STATUS_REPLAY).setMessageData(s.toByteString())
 				.build();
 
 		conn.send(h.toByteArray());
 	}
-
-	public void OperationStarted()
+	
+	public void SendStatusReplay(StatusReplay s)
 	{
 		for (WebSocket conn : server.connections())
 		{
-			OperationStarted(conn);
+			SendStatusReplay(s, conn);
+		}
+	}
+	
+	public void SendStatusReplay(StatusReplay s, WebSocket conn)
+	{
+		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.STATUS_REPLAY).setMessageData(s.toByteString())
+				.build();
+
+		conn.send(h.toByteArray());
+	}
+	
+
+	public void OperationStarted(String message)
+	{
+		for (WebSocket conn : server.connections())
+		{
+			OperationStarted(message, conn);
 		}
 	}
 
-	public void OperationStarted(WebSocket conn)
+	public void OperationStarted(String message, WebSocket conn)
 	{
-		StatusReplay s = StatusReplay.newBuilder().setStatus(STATUS.RUN).build();
+		StatusReplay s = StatusReplay.newBuilder().setStatus(STATUS.RUN).setStatusDescription(message).build();
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.STATUS_REPLAY).setMessageData(s.toByteString())
 				.build();
 
