@@ -374,7 +374,6 @@ public class MainWindow implements GuiInterface
 		txtFileName.setToolTipText("Filename to record to or transmit from");
 		txtFileName.setSize(new Dimension(0, 0));
 		txtFileName.setFont(new Font("Arial", Font.PLAIN, 14));
-		txtFileName.setEditable(false);
 		txtFileName.setColumns(10);
 		txtFileName.setBounds(161, 65, 285, 23);
 
