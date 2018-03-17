@@ -1,7 +1,16 @@
 package jrecorder;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.security.KeyStore;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.log4j.Logger;
 import org.java_websocket.client.WebSocketClient;
@@ -29,11 +38,51 @@ class ManagementClient extends WebSocketClient
 	Boolean				gotAck				= false;
 	Boolean				gotNck				= false;
 
-	public ManagementClient(URI serverUri, GuiInterface gui)
+	public ManagementClient(URI serverUri, GuiInterface gui, String keyfile) throws URISyntaxException
 	{
-		super(serverUri);
+		super(new URI("ws://192.168.168.3:8887"));
 		this.gui = gui;
-		this.connect();
+		if (serverUri.toString().startsWith("wss")) 
+		{
+	        try 
+	        {
+	        	String STORETYPE = "JKS";
+	    		String KEYSTORE = keyfile;
+	    		String STOREPASSWORD = "12345678";
+	    		String KEYPASSWORD = "12345678";
+
+	    		KeyStore ks = KeyStore.getInstance( STORETYPE );
+	    		File kf = new File( KEYSTORE );
+	    		System.out.println("File = " + kf.getAbsolutePath());
+	    		ks.load( new FileInputStream( kf ), STOREPASSWORD.toCharArray() );
+
+				KeyManagerFactory kmf = KeyManagerFactory.getInstance( "SunX509" );
+	    		kmf.init( ks, KEYPASSWORD.toCharArray() );
+	    		TrustManagerFactory tmf = TrustManagerFactory.getInstance( "SunX509" );
+	    		tmf.init( ks );
+
+	    		SSLContext sslContext = null;
+	    		sslContext = SSLContext.getInstance( "TLS" );
+	    		sslContext.init( kmf.getKeyManagers(), tmf.getTrustManagers(), null );
+	    		// sslContext.init( null, null, null ); // will use java's default key and trust store which is sufficient unless you deal with self-signed certificates
+
+	    		SSLSocketFactory factory = sslContext.getSocketFactory();// (SSLSocketFactory) SSLSocketFactory.getDefault();
+
+	    		this.setSocket( factory.createSocket() );
+	        } 
+	        catch (Exception e) 
+	        {
+	            logger.error("Could not initialize SSL connection", e);
+	        }
+	    }
+		try
+		{
+			this.connect();
+		}
+		catch (Exception e) 
+        {
+            logger.error("Could not connect to server", e);
+        }
 	}
 
 	@Override
@@ -137,12 +186,14 @@ class ManagementClient extends WebSocketClient
 	public void onClose(int code, String reason, boolean remote)
 	{
 		logger.info("Disconnected");
+		gui.UpdateStatus("Connection to server Closed");
 	}
 
 	@Override
 	public void onError(Exception ex)
 	{
 		logger.error("Wensocket error", ex);
+		gui.UpdateStatus("Wensocket error" + ex.getMessage());
 	}
 
 	public Boolean SendRecordCommand()
@@ -158,7 +209,7 @@ class ManagementClient extends WebSocketClient
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.SPECTRUM).setMessageData(s.toByteString())
 				.build();
 
-		this.send(h.toByteArray());
+		Send(h.toByteArray());
 		return true;
 	}
 
@@ -170,7 +221,7 @@ class ManagementClient extends WebSocketClient
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.PLAY_CMD).setMessageData(p.toByteString())
 				.build();
 
-		this.send(h.toByteArray());
+		Send(h.toByteArray());
 		return true;
 	}
 
@@ -182,7 +233,7 @@ class ManagementClient extends WebSocketClient
 
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.RECORD).setMessageData(s.toByteString()).build();
 
-		this.send(h.toByteArray());
+		Send(h.toByteArray());
 		return true;
 	}
 
@@ -190,10 +241,17 @@ class ManagementClient extends WebSocketClient
 	{
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.STOP_CMD).build();
 
-		this.send(h.toByteArray());
+		Send(h.toByteArray());
 		return true;
 	}
 
+	public void Send(byte [] data)
+	{
+		if (this.isOpen())
+		{
+			send(data);
+		}
+	}
 	public void Send(int Sequence, OPCODE opcode, ByteString data)
 	{
 		gotAck = false;
@@ -201,7 +259,8 @@ class ManagementClient extends WebSocketClient
 
 		Header h = Header.newBuilder().setSequence(Sequence).setOpcode(opcode).setMessageData(data).build();
 
-		this.send(h.toByteArray());
+		Send(h.toByteArray());
+		
 	}
 
 	public Boolean WaitForAck(long milliseconds)

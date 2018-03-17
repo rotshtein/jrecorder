@@ -3,6 +3,7 @@ package jrecorder;
 import java.io.File;
 import java.util.AbstractMap;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -98,6 +99,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			Kill();
 			procMon = sw.GetMessurment(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
 			SendAck(h, conn);
+			UpdateStatus("Specturm process started...");
 
 			break;
 
@@ -113,23 +115,30 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 			}
 
+			if (!new File(r.getApplicationExecute()).exists())
+			{
+				SendStatusMessage("Recorder exec not found. Please fix the configuration file", conn);
+				SendNck(h, conn);
+				return;
+			}
+
 			Record rec = new Record(r.getApplicationExecute(), "./spectrum.txt", this);
 			try
 			{
 				Kill();
 				procMon = rec.Start(r.getFrequency(), r.getRate(), r.getGain(), r.getFilename(),
 						r.getNumberOfSamples());
-				SendStatusMessage("Starting to record to " + r.getFilename(), conn);
+				UpdateStatus("Starting to record to " + r.getFilename());
 				logger.info("Starting to record");
+				
 				SendAck(h, conn);
 			}
 			catch (Exception e)
 			{
 				SendStatusMessage("Record exec not found. Please fix the configuration file", conn);
 				logger.error("Spectrum exec not found. Please fix the configuration file,e");
+				SendNck(h, conn);
 			}
-			SendNck(h, conn);
-
 			break;
 
 		case PLAY_CMD:
@@ -144,12 +153,26 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 			}
 
+			if (!new File(p.getApplicationExecute()).exists())
+			{
+				SendStatusMessage("Transmit exec not found. Please fix the configuration file", conn);
+				SendNck(h, conn);
+				return;
+			}
+
+			if (p.getFilename() == "" | !(new File(p.getFilename()).exists()))
+			{
+				SendStatusMessage("Transmit data file not found. Please spcify filename", conn);
+				SendNck(h, conn);
+				return;
+			}
+
 			Transmit tx = new Transmit(p.getApplicationExecute(), "./spectrum.txt", this);
 			try
 			{
 				Kill();
 				procMon = tx.Start(p.getFrequency(), p.getRate(), p.getGain(), p.getFilename(), p.getLoop());
-				SendStatusMessage("Starting to transmirt " + p.getFilename(), conn);
+				UpdateStatus("Starting to transmirt " + p.getFilename());
 				logger.info("Starting to record");
 				SendAck(h, conn);
 				OperationStarted();
@@ -174,7 +197,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			if (!procMon.isComplete())
 			{
 				logger.warn("Killing process. [ " + procMon.description + " ]");
-				SendStatusMessage("Killing process. [ " + procMon.description + " ]", conn);
+				UpdateStatus("Killing process. [ " + procMon.description + " ]");
 				procMon.kill();
 				OperationCompleted();
 			}

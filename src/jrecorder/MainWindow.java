@@ -21,7 +21,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -41,24 +45,14 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.log4j.Logger;
+import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
+
 
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 
-class StatusBar extends JLabel {
-    
-    /** Creates a new instance of StatusBar */
-    public StatusBar() {
-        super();
-        super.setPreferredSize(new Dimension(100, 16));
-        setMessage("Ready");
-    }
-     
-    public void setMessage(String message) {
-        setText(" "+message);        
-    }        
-}
+
 
 public class MainWindow implements GuiInterface
 {
@@ -105,8 +99,6 @@ public class MainWindow implements GuiInterface
 	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbRate = new JComboBox();
 	
-	StatusBar statusBar;
-
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
 	public MainWindow()
@@ -457,15 +449,50 @@ public class MainWindow implements GuiInterface
 
 		txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
 
-		String host = param.Get("ListenAddress", "127.0.0.1");
+		String host = param.Get("ListenAddress", "0.0.0.0");
 		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
 
 		server = new ManagementServer(new InetSocketAddress(host, port));
+		logger.info("Server is listning to " + host + ":" + port);
+		if (param.Get("UseSecuredSocket", "no").equalsIgnoreCase("yes"))
+		{
+			try 
+		        {
+		        	String STORETYPE = "JKS";
+		    		String KEYSTORE = "server.jks";
+		    		String STOREPASSWORD = "12345678";
+		    		String KEYPASSWORD = "12345678";
+	
+		    		KeyStore ks = KeyStore.getInstance( STORETYPE );
+		    		File kf = new File( KEYSTORE );
+		    		ks.load( new FileInputStream( kf ), STOREPASSWORD.toCharArray() );
+	
+					KeyManagerFactory kmf = KeyManagerFactory.getInstance( "SunX509" );
+		    		kmf.init( ks, KEYPASSWORD.toCharArray() );
+		    		TrustManagerFactory tmf = TrustManagerFactory.getInstance( "SunX509" );
+		    		tmf.init( ks );
+	
+		    		SSLContext sslContext = null;
+		    		sslContext = SSLContext.getInstance( "TLS" );
+		    		sslContext.init( kmf.getKeyManagers(), tmf.getTrustManagers(), null );
+		    		//sslContext.init( null, null, null ); // will use java's default key and trust store which is sufficient unless you deal with self-signed certificates
+	
+		    		//SSLSocketFactory factory = sslContext.getSocketFactory();// (SSLSocketFactory) SSLSocketFactory.getDefault();
+		    		server.setWebSocketFactory( new DefaultSSLWebSocketServerFactory( sslContext ) );
+	
+		        } 
+		        catch (Exception e) 
+		        {
+		            logger.error("Could not initialize SSL connection", e);
+		        }
+		}
 		server.start();
 
 		try
 		{
-			client = new ManagementClient(new URI("ws://127.0.0.1:8887"), this);
+			String Uri = param.Get("ServerUri","ws://127.0.0.1:8887");
+			logger.info("Server Uri is: " + Uri );
+			client = new ManagementClient(new URI(Uri), this, "client.jks");
 		}
 		catch (URISyntaxException e)
 		{
@@ -617,13 +644,6 @@ public class MainWindow implements GuiInterface
 
 		String RecorderExe = param.Get("RecorderExec", "./Spectrum");
 
-		if (!new File(RecorderExe).exists())
-		{
-			JOptionPane.showMessageDialog(f, "Recorder exec not found. Please fix the configuration file", "Rercord",
-					JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
 		if (getFilename() == "")
 		{
 			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
@@ -656,31 +676,10 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		if (getFilename() == "" | !(new File(getFilename()).exists()))
-		{
-			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
-					JOptionPane.ERROR_MESSAGE);
-			return;
-
-		}
-
+		
 		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
 
-		if (!new File(TransmitExe).exists())
-		{
-			JOptionPane.showMessageDialog(f, "Recorder exec not found. Please fix the configuration file", "Rercord",
-					JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
-		if (getFilename() == "")
-		{
-			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
-					JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
-		double CentralFreq = 0;
+				double CentralFreq = 0;
 		try
 		{
 			CentralFreq = getF0();
