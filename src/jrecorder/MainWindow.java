@@ -429,6 +429,8 @@ public class MainWindow implements GuiInterface
 		
 		panel.add(txtStatus);
 		
+		f.setTitle(f.getTitle() + " - Ver 1.0");
+		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
 		
@@ -437,6 +439,7 @@ public class MainWindow implements GuiInterface
 
 	private void Init()
 	{
+		
 		try
 		{
 			param = new Parameters("recorder.ini");
