@@ -32,10 +32,9 @@ public abstract class Operation implements Runnable
 		{
 			try
 			{
-
 				ProcessBuilder builder = new ProcessBuilder(vars);
-				// builder.redirectOutput(new File("out.txt"));
-				// builder.redirectError(new File("out.txt"));
+				builder.redirectOutput(new File("./out.txt"));
+				builder.redirectError(new File("./error.txt"));
 				p = builder.start(); // may throw IOException
 
 				// while (!p.isAlive());

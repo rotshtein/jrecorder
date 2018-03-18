@@ -214,11 +214,11 @@ class ManagementClient extends WebSocketClient
 		return false;
 	}
 
-	public Boolean SendSpectrumCommand(double CenterFrequncy, double Rate, double Gain, String SpectrumBin,
+	public Boolean SendSpectrumCommand(double CenterFrequncy, double Rate, double Gain, double bw, String SpectrumBin,
 			String SpectrumExe)
 	{
 		SpectrumCommand s = SpectrumCommand.newBuilder().setApplicationExecute(SpectrumExe).setFilename(SpectrumBin)
-				.setGain(Gain).setFrequency(CenterFrequncy).setRate(Rate).build();
+				.setGain(Gain).setFrequency(CenterFrequncy).setRate(Rate).setBw(bw).build();
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.SPECTRUM).setMessageData(s.toByteString())
 				.build();
 
@@ -226,11 +226,11 @@ class ManagementClient extends WebSocketClient
 		return true;
 	}
 
-	public Boolean SendPlayCommand(double CenterFrequncy, double Rate, double Gain, Boolean Loop, String Filename,
+	public Boolean SendPlayCommand(double CenterFrequncy, double Rate, double Gain, double bw,Boolean Loop, String Filename,
 			String PlayExe)
 	{
 		PlayCommand p = PlayCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain)
-				.setFilename(Filename).setApplicationExecute(PlayExe).setLoop(Loop).build();
+				.setFilename(Filename).setApplicationExecute(PlayExe).setBw(bw).setLoop(Loop).build();
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.PLAY_CMD).setMessageData(p.toByteString())
 				.build();
 
@@ -238,10 +238,10 @@ class ManagementClient extends WebSocketClient
 		return true;
 	}
 
-	public Boolean SendRecordCommand(double CenterFrequncy, double Rate, double Gain, String Filename,
+	public Boolean SendRecordCommand(double CenterFrequncy, double Rate, double Gain, double bw, String Filename,
 			double NumberOfSampels, String RecordExe)
 	{
-		RecordCommand s = RecordCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain)
+		RecordCommand s = RecordCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain).setBw(bw)
 				.setFilename(Filename).setNumberOfSamples(NumberOfSampels).setApplicationExecute(RecordExe).build();
 
 		Header h = Header.newBuilder().setSequence(0).setOpcode(OPCODE.RECORD).setMessageData(s.toByteString()).build();

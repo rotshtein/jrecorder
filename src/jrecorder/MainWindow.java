@@ -594,7 +594,8 @@ public class MainWindow implements GuiInterface
 
 		String SpectrumBin = param.Get("SpectrumBin", "/home/x300/spectrum.dat");
 
-		client.SendSpectrumCommand(CenterFrequncy, getRate(), Gain, SpectrumBin, SpectrumExe);
+		
+		client.SendSpectrumCommand(CenterFrequncy, getRate(), Gain, getBW(), SpectrumBin, SpectrumExe);
 
 		/*if (client.WaitForAck(60000) == false)
 		{
@@ -651,7 +652,7 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		client.SendRecordCommand(CentralFreq, Rate, getGain(), getFilename(), dNumSamples, RecorderExe);
+		client.SendRecordCommand(CentralFreq, Rate, getGain(), getBW(), getFilename(), dNumSamples, RecorderExe);
 
 	}
 
@@ -691,7 +692,7 @@ public class MainWindow implements GuiInterface
 			cmbRate.setSelectedItem(Rate);
 		}
 		
-		client.SendPlayCommand(CentralFreq, Rate, getGain(), Loop, getFilename(), TransmitExe);
+		client.SendPlayCommand(CentralFreq, Rate, getGain(), getBW(), Loop, getFilename(), TransmitExe);
 	}
 
 	public void OperationCompleted()
@@ -719,6 +720,29 @@ public class MainWindow implements GuiInterface
 			f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
 		}
 		return f0;
+	}
+	
+	private double getBW()
+	{
+		double bw = 50e6;
+		if (cmbCenter.getSelectedIndex() != 0) // Center
+		{
+			bw = (double) ((Integer) numBAndwidth.getValue()) * 1e6;
+		}
+		else
+		{
+			if ((Integer) numBAndwidth.getValue() > (Integer) numCenter.getValue())
+			{
+				JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch", "Record",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			else
+			{
+				bw = (Integer) numCenter.getValue() - (Integer) numBAndwidth.getValue();
+			}
+			
+		}
+		return bw;
 	}
 
 	private double getGain()

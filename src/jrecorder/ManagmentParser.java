@@ -174,7 +174,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			try
 			{
 				Kill();
-				procMon = rec.Start(r.getFrequency(), r.getRate(), r.getGain(), r.getFilename(),
+				procMon = rec.Start(r.getFrequency(), r.getRate(), r.getGain(), r.getBw(), r.getFilename(),
 						r.getNumberOfSamples());
 				OperationStarted(procMon.description + " Started");
 				logger.info("Starting to record");
@@ -219,7 +219,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			try
 			{
 				Kill();
-				procMon = tx.Start(p.getFrequency(), p.getRate(), p.getGain(), p.getFilename(), p.getLoop());
+				procMon = tx.Start(p.getFrequency(), p.getRate(), p.getGain(), p.getBw(), p.getFilename(), p.getLoop());
 				UpdateStatus("Starting to transmirt " + p.getFilename());
 				logger.info("Starting to record");
 				OperationStarted(procMon.description + " Started");
