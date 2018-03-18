@@ -455,7 +455,7 @@ public class MainWindow implements GuiInterface
 		String host = param.Get("ListenAddress", "0.0.0.0");
 		int port = Integer.parseInt(param.Get("ListenPort", "8887"));
 
-		server = new ManagementServer(new InetSocketAddress(host, port));
+		server = new ManagementServer(new InetSocketAddress(host, port), txtIP.getText());
 		logger.info("Server is listning to " + host + ":" + port);
 		if (param.Get("UseSecuredSocket", "no").equalsIgnoreCase("yes"))
 		{

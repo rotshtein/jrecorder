@@ -26,10 +26,10 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>>	queue				= null;
 	Boolean														connectionStatus	= false;
 
-	public ManagementServer(InetSocketAddress address)
+	public ManagementServer(InetSocketAddress address, String EttusAddress)
 	{
 		super(address);
-		connectivityThread = new CheckConnectivity(this, "127.0.0.1");
+		connectivityThread = new CheckConnectivity(this, EttusAddress);
 		Thread thread = new Thread(connectivityThread);
 		thread.start();
 		try
