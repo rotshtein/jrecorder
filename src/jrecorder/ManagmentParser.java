@@ -1,11 +1,16 @@
 package jrecorder;
 
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.AbstractMap;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
+
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import recorder_proto.Recorder.ConnectionStatus;
@@ -15,6 +20,7 @@ import recorder_proto.Recorder.PlayCommand;
 import recorder_proto.Recorder.RecordCommand;
 import recorder_proto.Recorder.STATUS;
 import recorder_proto.Recorder.SpectrumCommand;
+import recorder_proto.Recorder.SpectrumData;
 import recorder_proto.Recorder.StatusMessage;
 import recorder_proto.Recorder.StatusReplay;
 
@@ -66,7 +72,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			SendNck(h, conn);
 			return;
 		}
-
+		String FeedbackFile = param.Get("FeedBackFile", "/home/x300/Statuses.txt");
 		switch (h.getOpcode())
 		{
 		case HEADER:
@@ -95,11 +101,46 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 				return;
 			}
-
-			SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
+			
+			Spectrum st = new Spectrum(SpectrumExe,FeedbackFile, this);
 			Kill();
-			procMon = sw.GetMessurment(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
-			SendAck(h, conn);
+			try 
+			{
+				procMon = st.Start(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
+				SendAck(h, conn);
+				
+				File file = new File(s.getFilename());
+
+				int i = 0;
+				while (!file.exists())
+				{
+					Thread.sleep(100);
+					if (i++ > 600 || procMon.isComplete())
+					{
+						logger.error("Failed to get spectrum data");
+						OperationCompleted("Failed to get spectrum data");
+						return;
+					}
+				}
+
+				FileInputStream fis = new FileInputStream(file);
+				byte[] data = new byte[(int) file.length()];
+				fis.read(data);
+				fis.close();
+				
+				SpectrumData sd = SpectrumData.newBuilder().setMessageData(ByteString.copyFrom(data)).build();
+				Header hh = Header.newBuilder().setSequence(h.getSequence()).setOpcode(OPCODE.SPECTRUM_DATA).setMessageData(sd.toByteString()).build();
+
+				conn.send(hh.toByteArray());
+				
+			} 
+			catch (Exception e1) 
+			{
+				logger.error("Failed to start Spectrum capture", e1);
+				UpdateStatus("Failed to start Spectrum capture");
+				SendNck(h, conn);
+			}
+			
 			
 			OperationStarted("Specturm process started");
 
@@ -123,8 +164,8 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 				return;
 			}
-
-			Record rec = new Record(r.getApplicationExecute(), "./spectrum.txt", this);
+			
+			Record rec = new Record(r.getApplicationExecute(), FeedbackFile, this);
 			try
 			{
 				Kill();
@@ -168,8 +209,8 @@ public class ManagmentParser extends Thread implements GuiInterface
 				SendNck(h, conn);
 				return;
 			}
-
-			Transmit tx = new Transmit(p.getApplicationExecute(), "./spectrum.txt", this);
+			
+			Transmit tx = new Transmit(p.getApplicationExecute(), FeedbackFile, this);
 			try
 			{
 				Kill();
@@ -377,6 +418,13 @@ public class ManagmentParser extends Thread implements GuiInterface
 		{
 			SendStatusMessage(status, conn);
 		}
+	}
+
+	@Override
+	public void ShowSpectrumData(byte[] data) 
+	{
+		logger.error("Should got to here");
+		
 	}
 
 }

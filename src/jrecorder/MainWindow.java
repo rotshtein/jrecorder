@@ -417,7 +417,7 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(pnlRate);
 		cmbRate.setBounds(10, 32, 181, 23);
 		pnlRate.add(cmbRate);
-		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "100", "84.6", "42.3", "21.15", "11"}));
+		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "184.32", "100", "92.16", "50", "46.08", "25", "23.04"}));
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
@@ -593,28 +593,14 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		String SpectrumBin = param.Get("SpectrumBin", "Spectrum.dat");
+		String SpectrumBin = param.Get("SpectrumBin", "/home/x300/spectrum.dat");
 
 		client.SendSpectrumCommand(CenterFrequncy, getRate(), Gain, SpectrumBin, SpectrumExe);
 
-		if (client.WaitForAck(1000) == false)
+		if (client.WaitForAck(60000) == false)
 		{
 			UpdateStatus("Communication timeout");
 			return;
-		}
-
-		SpectrumWindow sw = new SpectrumWindow(SpectrumExe);
-
-		try
-		{
-			sw.Show(SpectrumBin);
-			UpdateStatus("Showing spectrum ....");
-		}
-		catch (FileNotFoundException e)
-		{
-			JOptionPane.showMessageDialog(f, "Error while building spectrum.", "Spectrum", JOptionPane.ERROR_MESSAGE);
-			UpdateStatus("Error while Showing spectrum");
-			logger.error("Error while Showing spectrum");
 		}
 	}
 
@@ -785,6 +771,40 @@ public class MainWindow implements GuiInterface
 		return Rate;
 	}
 	
+	@Override
+	public void ShowSpectrumData(final byte[] data) 
+	{
+		if (!SwingUtilities.isEventDispatchThread())
+		{
+			SwingUtilities.invokeLater(new Runnable()
+			{
+
+				@Override
+				public void run()
+				{
+					ShowSpectrumData(data);
+				}
+			});
+			return;
+		}
+		SpectrumWindow sw = new SpectrumWindow();
+
+		try
+		{
+			sw.Show(data);
+			UpdateStatus("Showing spectrum ....");
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(f, "Error while building spectrum.", "Spectrum", JOptionPane.ERROR_MESSAGE);
+			UpdateStatus("Error while Showing spectrum");
+			logger.error("Error while Showing spectrum");
+		}
+
+		
+		
+	}
+	
 	private String getFilename()
 	{
 		return txtFileName.getText();
@@ -809,4 +829,6 @@ public class MainWindow implements GuiInterface
 			}
 		});
 	}
+
+	
 }

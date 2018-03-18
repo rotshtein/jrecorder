@@ -72,55 +72,58 @@ public abstract class Operation implements Runnable
 		FeedbackFile ff = null;
 		String message;
 
-		for (int i = 0; i < 10; i++)
+		if (messageFile != null)
 		{
-			try
+			for (int i = 0; i < 120; i++)
 			{
-				ff = new FeedbackFile(messageFile);
+				try
+				{
+					ff = new FeedbackFile(messageFile);
+				}
+				catch (Exception e)
+				{
+					try
+					{
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e1)
+					{
+	
+					}
+				}
 			}
-			catch (Exception e)
+			if (ff == null)
 			{
+				gui.UpdateStatus("Faild in open feedback file");
+				logger.error("Faild in open feedback file");
+				return;
+			}
+			while (p.isAlive())
+			{
+				// Read feedback file
+				if ((message = ff.GetNext()) != null)
+				{
+					// Update status bar
+					gui.UpdateStatus(message);
+				}
+	
+				// call complete and exit when ended
+				if (isComplete())
+				{
+					gui.UpdateStatus("End transmitting file");
+					logger.info("End transmitting file");
+					break;
+				}
+	
 				try
 				{
 					Thread.sleep(500);
 				}
-				catch (InterruptedException e1)
+				catch (InterruptedException e)
 				{
-
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			}
-		}
-		if (ff == null)
-		{
-			gui.UpdateStatus("Faild in open feedback file");
-			logger.error("Faild in open feedback file");
-			return;
-		}
-		while (p.isAlive())
-		{
-			// Read feedback file
-			if ((message = ff.GetNext()) != null)
-			{
-				// Update status bar
-				gui.UpdateStatus(message);
-			}
-
-			// call complete and exit when ended
-			if (isComplete())
-			{
-				gui.UpdateStatus("End transmitting file");
-				logger.info("End transmitting file");
-				break;
-			}
-
-			try
-			{
-				Thread.sleep(500);
-			}
-			catch (InterruptedException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 		logger.info("Exiting feednbak file thread");

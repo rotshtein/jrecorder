@@ -1,12 +1,12 @@
 package jrecorder;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.io.OutputStream;
 
 import javax.swing.JFrame;
@@ -35,16 +35,17 @@ public class SpectrumWindow
 	Process				spectrumProcess;
 	ProcMon				procMon;
 
-	public SpectrumWindow(String SpectrunExe)
+	public SpectrumWindow()
 	{
-		spectrun_exe = SpectrunExe;
+		//spectrun_exe = SpectrunExe;
 	}
 
 	/**
 	 * @throws FileNotFoundException
 	 * @wbp.parser.entryPoint
 	 */
-	public void Show(String Filename) throws FileNotFoundException
+	//public void Show(String Filename) throws FileNotFoundException
+	public void Show(byte [] rawdata)// throws FileNotFoundException
 	{
 		final NumberAxis domainAxis = new NumberAxis("[MHz]");
 		domainAxis.setRange(0.00, 1024 * 32);
@@ -53,21 +54,7 @@ public class SpectrumWindow
 		XYSeries series1 = new XYSeries("RF");
 		try
 		{
-			File file = new File(Filename);
-
-			int i = 0;
-			while (!file.exists())
-			{
-				Thread.sleep(100);
-				if (i++ > 20)
-				{
-					series1.add(1, 2);
-					series1.add(2, 2);
-					return;
-				}
-			}
-
-			InputStream insputStream = new FileInputStream(file);
+			ByteArrayInputStream  insputStream =  new ByteArrayInputStream(rawdata);
 			DataInputStream dIn = new DataInputStream(insputStream);
 			float x, y;
 

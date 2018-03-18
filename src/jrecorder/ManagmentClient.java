@@ -25,6 +25,7 @@ import recorder_proto.Recorder.OPCODE;
 import recorder_proto.Recorder.PlayCommand;
 import recorder_proto.Recorder.RecordCommand;
 import recorder_proto.Recorder.SpectrumCommand;
+import recorder_proto.Recorder.SpectrumData;
 import recorder_proto.Recorder.StatusMessage;
 import recorder_proto.Recorder.StatusReplay;
 
@@ -40,7 +41,8 @@ class ManagementClient extends WebSocketClient
 
 	public ManagementClient(URI serverUri, GuiInterface gui, String keyfile) throws URISyntaxException
 	{
-		super(new URI("ws://192.168.168.3:8887"));
+		//super(new URI("ws://192.168.168.3:8887"));
+		super(serverUri);
 		this.gui = gui;
 		if (serverUri.toString().startsWith("wss")) 
 		{
@@ -104,7 +106,7 @@ class ManagementClient extends WebSocketClient
 		Header h = null;
 		try
 		{
-			h = Header.parseFrom(buffer);
+			h = Header.parseFrom(buffer.array());
 
 			if (h != null)
 			{
@@ -175,6 +177,11 @@ class ManagementClient extends WebSocketClient
 				gui.onConnectionChange(connectionStatus);
 				break;
 
+			case SPECTRUM_DATA:
+				SpectrumData sd = SpectrumData.parseFrom(h.getMessageData());
+				gui.ShowSpectrumData(sd.getMessageData().toByteArray());
+				break;
+				
 			default:
 				logger.error("Unknown command.");
 				break;

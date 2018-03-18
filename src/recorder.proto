@@ -27,6 +27,7 @@ enum OPCODE
 	STATUS_REPLAY = 8;
 	STATUS_MESSAGE = 9;
 	CONNECTION_STATUS = 10;
+	SPECTRUM_DATA = 11;
 }
 
 
@@ -133,4 +134,11 @@ message StatusReplay
 message ConnectionStatus
 {
 	bool status = 1;
+}
+
+/*****************************************************************************************************************************/
+// This replay is sent as response to StatusRequest, ss event for new warning/error or when ever the status changes, new warning
+message SpectrumData
+{
+	bytes message_data = 1;
 }

@@ -23,8 +23,8 @@ public class Record extends Operation
 			{
 				String vars[] =
 				{ super.exe_file, "--mode", "record", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
-						"--gain", Double.toString(Gain), "--file", Filename, "--nsamps", Double.toString(NumSamples),
-						"--exe", super.exe_file };
+						"--gain", Double.toString(Gain), "--file", Filename, "--nsamps", Double.toString(NumSamples)
+				};
 				p = super.StartAction(vars);
 			}
 			catch (Exception ex)
