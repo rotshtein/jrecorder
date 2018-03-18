@@ -56,13 +56,13 @@ public class SpectrumWindow
 		{
 			ByteArrayInputStream  insputStream =  new ByteArrayInputStream(rawdata);
 			DataInputStream dIn = new DataInputStream(insputStream);
-			float x, y;
+			short x, y;
 
 			while (dIn.available() > 0)
 			{
 
-				x = dIn.readFloat();
-				y = dIn.readFloat();
+				x = dIn.readShort();
+				y = dIn.readShort();
 				series1.add(x, y);
 			}
 			dIn.close();

@@ -50,6 +50,7 @@ message SpectrumCommand
 	double gain = 3;				// gain - default is 0; can be 0-31.5
 	string filename = 4;			// The pull path for the spectrum pairs in - file location and name
 	string application_execute = 5;	// Binary to execute
+	double bw = 6;
 }
 
 /*****************************************************************************************************************************/
@@ -62,6 +63,7 @@ message RecordCommand
 	string filename = 4;			// The pull path for the recorded file location and name
 	double number_of_samples = 5;	// File size in samples
 	string application_execute = 6;	// Binary to execute
+	double bw = 7;
 }
 
 /*****************************************************************************************************************************/
@@ -75,6 +77,7 @@ message PlayCommand
 	bool	loop = 5;				// Transmit the file in loop
 	double number_of_samples = 6;	// File size in samples
 	string application_execute = 7;	// Binary to execute
+	double bw = 8;
 }
 
 /*****************************************************************************************************************************/

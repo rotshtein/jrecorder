@@ -102,8 +102,15 @@ public class ManagmentParser extends Thread implements GuiInterface
 				return;
 			}
 			
-			Spectrum st = new Spectrum(SpectrumExe,FeedbackFile, this);
+			try
+			{
+				new File(s.getFilename()).delete();
+			}
+			catch (Exception e) {}
 			Kill();
+			
+			Spectrum st = new Spectrum(SpectrumExe,FeedbackFile, this);
+			
 			try 
 			{
 				procMon = st.Start(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
@@ -115,7 +122,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 				while (!file.exists())
 				{
 					Thread.sleep(100);
-					if (i++ > 600 || procMon.isComplete())
+					if (i++ > 600)// || procMon.isComplete())
 					{
 						logger.error("Failed to get spectrum data");
 						OperationCompleted("Failed to get spectrum data");

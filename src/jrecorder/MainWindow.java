@@ -597,11 +597,11 @@ public class MainWindow implements GuiInterface
 
 		client.SendSpectrumCommand(CenterFrequncy, getRate(), Gain, SpectrumBin, SpectrumExe);
 
-		if (client.WaitForAck(60000) == false)
+		/*if (client.WaitForAck(60000) == false)
 		{
 			UpdateStatus("Communication timeout");
 			return;
-		}
+		}*/
 	}
 
 	void Record()
