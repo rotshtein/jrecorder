@@ -13,10 +13,12 @@ public class CheckConnectivity implements Runnable
 	ConnectionInterface	_gui	= null;
 	InetAddress			inet;
 	Boolean				_run	= true;
+	String host = null;
 
 	public CheckConnectivity(ConnectionInterface gui, String host)
 	{
 		_gui = gui;
+		this.host = host;
 		try
 		{
 			inet = InetAddress.getByName(host);
@@ -41,10 +43,13 @@ public class CheckConnectivity implements Runnable
 		{
 			try
 			{
-				Boolean c = inet.isReachable(2000);
-				_gui.onConnectionChange(c);
+				 Process p1 = java.lang.Runtime.getRuntime().exec("ping -c 1 " + host);
+				 int returnVal = p1.waitFor();
+				 Boolean reachable = (returnVal==0);
+				 //Boolean c = inet.isReachable(2000);
+				_gui.onConnectionChange(reachable);
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				logger.error("Fiald in pinging to host", e);
 			}

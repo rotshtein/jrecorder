@@ -36,7 +36,13 @@ public abstract class Operation implements Runnable
 				builder.redirectOutput(new File("./out.txt"));
 				builder.redirectError(new File("./error.txt"));
 				p = builder.start(); // may throw IOException
-
+				String CommandLine = "";
+				for(String var : vars)
+				{
+					CommandLine += var +", ";
+				}
+				
+				logger.info("Starting " + operation + ": " +CommandLine);
 				// while (!p.isAlive());
 
 				procMon = new ProcMon(p, operation);
