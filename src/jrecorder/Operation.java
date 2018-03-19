@@ -39,7 +39,7 @@ public abstract class Operation implements Runnable
 				String CommandLine = "";
 				for(String var : vars)
 				{
-					CommandLine += var +", ";
+					CommandLine += var +" ";
 				}
 				
 				logger.info("Starting " + operation + ": " +CommandLine);
