@@ -52,7 +52,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 
 
-
 public class MainWindow implements GuiInterface
 {
 
@@ -97,6 +96,7 @@ public class MainWindow implements GuiInterface
 	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbRate = new JComboBox();
 	private final JLabel txtStatus = new JLabel("Statusbar");
+	private final JPanel panel = new JPanel();
 	
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -127,7 +127,7 @@ public class MainWindow implements GuiInterface
 				System.exit(0);
 			}
 		});
-		f.setSize(new Dimension(487, 609));
+		f.setSize(new Dimension(487, 641));
 		f.setType(Type.UTILITY);
 		f.setResizable(false);
 		f.setTitle("RF Recorder");
@@ -399,16 +399,16 @@ public class MainWindow implements GuiInterface
 		lblLed.setBounds(404, 13, 25, 25);
 		f.getContentPane().add(lblLed);
 		lblLed.setIcon(Red_icon);
-		//txtStatus.setBounds(0, f.getHeight()-35, f.getWidth(), 444);
-		/*
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			txtStatus.setBounds(10, f.getBounds().getSize().height-50, f.getBounds().getSize().width, 30);
-		}
-		else
-		{
-			txtStatus.setBounds(10, f.getBounds().getSize().height-30, f.getBounds().getSize().width, 30);
-		}*/
+		panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Status Bar", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panel.setBounds(10, 555, 461, 55);
+		
+		f.getContentPane().add(panel);
+		panel.setLayout(null);
+		txtStatus.setBounds(6, 16, 443, 33);
+		panel.add(txtStatus);
+		txtStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		txtStatus.setToolTipText("hello");
+		txtStatus.setVerticalAlignment(SwingConstants.BOTTOM);
 		pnlRate.setLayout(null);
 		pnlRate.setName("");
 		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
@@ -422,8 +422,6 @@ public class MainWindow implements GuiInterface
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
-		txtStatus.setBounds(12, 570, 463, 27);
-		f.getContentPane().add(txtStatus);
 		
 		f.setTitle(f.getTitle() + " - Ver 1.0");
 		
@@ -962,6 +960,4 @@ public class MainWindow implements GuiInterface
 			}
 		});
 	}
-
-	
 }
