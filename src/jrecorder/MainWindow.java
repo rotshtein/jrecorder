@@ -633,7 +633,7 @@ public class MainWindow implements GuiInterface
 			break;
 
 		case 2:
-			dNumSamples = (int)(1073741824 * Val * 0.25);
+			dNumSamples = (int)(1e9/8 * Val);//(int)(1073741824 * Val * 0.25);
 			break;
 		}
 
@@ -705,7 +705,7 @@ public class MainWindow implements GuiInterface
 		double f0;
 		if (cmbCenter.getSelectedIndex() == 0) // Center
 		{
-			f0 = (double) ((Integer) numCenter.getValue()) * 1e6;
+			f0 = (double) ((double) numCenter.getValue()) * 1e6;
 		}
 		else
 		{
