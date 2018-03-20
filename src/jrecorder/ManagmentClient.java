@@ -18,6 +18,7 @@ import org.java_websocket.handshake.ServerHandshake;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.sun.security.ntlm.Client;
 
 import recorder_proto.Recorder.ConnectionStatus;
 import recorder_proto.Recorder.Header;
@@ -87,6 +88,12 @@ class ManagementClient extends WebSocketClient
         }
 	}
 
+	 public void dispose()
+	 {
+		 if (conn != null)
+			 conn.close();
+	 }
+	 
 	@Override
 	public void onOpen(ServerHandshake handshakedata)
 	{

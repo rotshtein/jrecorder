@@ -579,7 +579,15 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		double CenterFrequncy = (double) ((Double) numCenter.getValue()) * 1e6;
+		double CenterFrequncy=1000e6;
+		try 
+		{
+			CenterFrequncy = getF0();
+		} 
+		catch (Exception e) 
+		{
+			logger.error("Failed to get Center frequency",e);
+		}
 
 		double Gain = -1; // Automatic;
 		if (cmbAgc.getSelectedIndex() == 1) // Manual
@@ -703,7 +711,7 @@ public class MainWindow implements GuiInterface
 		double f0;
 		if (cmbCenter.getSelectedIndex() == 0) // Center
 		{
-			f0 = (double) ((double) numCenter.getValue()) * 1e6;
+			f0 = ((Integer) numCenter.getValue()).doubleValue() * 1e6;
 		}
 		else
 		{
@@ -714,7 +722,7 @@ public class MainWindow implements GuiInterface
 				throw new Exception("LowFreq > HighFreq");
 			}
 
-			double bw = (Integer) numCenter.getValue() - (Integer) numBAndwidth.getValue();
+			double bw = ((Integer) numCenter.getValue()).doubleValue() - ((Integer) numBAndwidth.getValue()).doubleValue();
 			f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
 		}
 		return f0;
@@ -918,7 +926,13 @@ public class MainWindow implements GuiInterface
 			});
 			return;
 		}
-		SpectrumWindow sw = new SpectrumWindow();
+		SpectrumWindow sw=null;
+		try {
+			sw = new SpectrumWindow(getF0());
+		} catch (Exception e1) {
+			return;
+			
+		}
 
 		try
 		{

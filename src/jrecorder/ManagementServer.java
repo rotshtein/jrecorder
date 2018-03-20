@@ -44,6 +44,11 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 		}
 	}
 
+	public void dispose()
+	{
+		Stop();
+	}
+	
 	public void Stop()
 	{
 		try

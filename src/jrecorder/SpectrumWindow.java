@@ -16,6 +16,7 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -32,10 +33,11 @@ public class SpectrumWindow
 	String				spectrun_exe;
 	Process				spectrumProcess;
 	ProcMon				procMon;
+	double centerFrequency;
 
-	public SpectrumWindow()
+	public SpectrumWindow(double CenterFrequency)
 	{
-		//spectrun_exe = SpectrunExe;
+		centerFrequency = CenterFrequency;
 	}
 
 	/**
@@ -49,7 +51,7 @@ public class SpectrumWindow
 		domainAxis.setRange(0.00, 1024 * 32);
 
 		XYSeriesCollection dataset = new XYSeriesCollection();
-		
+		//DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
 		XYSeries series1 = new XYSeries("RF");
 		
 		
@@ -58,15 +60,15 @@ public class SpectrumWindow
 		{
 			ByteArrayInputStream  insputStream =  new ByteArrayInputStream(rawdata);
 			DataInputStream dIn = new DataInputStream(insputStream);
-			float x, y;
+			double y;
+			double x = (centerFrequency/1e6) - (0xFFFF /2);
 			
 			while (dIn.available() > 0)
 			{
-
-				
 				y = dIn.readFloat();
-				x = dIn.readFloat();
-				series1.add(x, y);
+				//y = dIn.readFloat();
+				series1.add(x++, y);
+				//dataset.addValue(x, "RF", Float.toString(y));
 			}
 			dIn.close();
 			insputStream.close();
@@ -82,12 +84,13 @@ public class SpectrumWindow
 		dataset.addSeries(series1);
 		
 		JFreeChart chart = ChartFactory.createXYLineChart("Spectrum", "Frequncy [MHz]", "db", dataset);
-		final XYPlot plot = chart.getXYPlot();
-		ValueAxis axis = plot.getDomainAxis();
-		axis.setRange(0, 32000);
+		//JFreeChart chart = ChartFactory.createLineChart("Spectrum", "Frequncy [MHz]", "db", dataset,PlotOrientation.VERTICAL, true,true,false);
+		//final XYPlot plot = chart.getXYPlot();
+		//ValueAxis axis = plot.getDomainAxis();
+		//axis.setRange(0, 32000);
 		
 
-		axis.setFixedAutoRange(60000.0);
+		//axis.setFixedAutoRange(60000.0);
 
 		final JFrame frame = new JFrame("Specturm");
 		frame.addWindowListener(new WindowAdapter()

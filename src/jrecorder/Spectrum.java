@@ -12,7 +12,7 @@ public class Spectrum extends Operation
 
 	public Spectrum(String SpectrumExe, String messageFile, GuiInterface gui)
 	{
-		super(SpectrumExe, null, gui, "Spectrum");
+		super(SpectrumExe, messageFile, gui, "Spectrum");
 	}
 
 	public ProcMon Start(double f0, double Rate, double Gain, String Filename) throws Exception
