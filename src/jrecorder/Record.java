@@ -13,7 +13,7 @@ public class Record extends Operation
 		super(RecordExe, messageFile, gui, "Record");
 	}
 
-	public ProcMon Start(double f0, double Rate, double Gain, double bw, String Filename, double NumSamples) throws Exception
+	public ProcMon Start(double f0, double Rate, double Gain, double bw, String Filename, int NumSamples) throws Exception
 	{
 		ProcMon p = null;
 		if (new File(super.exe_file).exists())
@@ -23,7 +23,7 @@ public class Record extends Operation
 			{
 				String vars[] =
 				{ super.exe_file, "--mode", "record", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
-						"--gain", Double.toString(Gain),"--bw", Double.toString(bw),  "--file", Filename, "--nsamps", Double.toString(NumSamples)
+						"--gain", Double.toString(Gain),/*"--bw", Double.toString(bw),*/  "--file", Filename, "--nsamps", Integer.toString(NumSamples)
 				};
 				p = super.StartAction(vars);
 			}

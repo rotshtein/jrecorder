@@ -113,6 +113,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			{
 				procMon = st.Start(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
 				SendAck(h, conn);
+				UpdateStatus("Spectrum process started...Waiting for data");
 				
 				File file = new File(s.getFilename());
 

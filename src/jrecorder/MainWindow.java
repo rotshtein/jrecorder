@@ -96,7 +96,6 @@ public class MainWindow implements GuiInterface
 	private final JPanel pnlRate = new JPanel();
 	@SuppressWarnings("rawtypes")
 	private final JComboBox cmbRate = new JComboBox();
-	private final JPanel panel = new JPanel();
 	private final JLabel txtStatus = new JLabel("Statusbar");
 	
 	@SuppressWarnings(
@@ -119,6 +118,10 @@ public class MainWindow implements GuiInterface
 			@Override
 			public void windowClosing(WindowEvent arg0)
 			{
+				if (server != null)
+				{
+					server = null;
+				}
 				logger.debug("Exit");
 				Stop();
 				System.exit(0);
@@ -146,12 +149,12 @@ public class MainWindow implements GuiInterface
 			{
 				if (event.getItem().toString().equals(cmbAgc.getItemAt(0).toString()))
 				{
-					txtStatus.setText("Automatic AGC");
+					//txtStatus.setText("Automatic AGC");
 					numAgc.setEnabled(false);
 				}
 				else
 				{
-					txtStatus.setText("Manual AGC");
+					//txtStatus.setText("Manual AGC");
 					numAgc.setEnabled(true);
 				}
 			}
@@ -291,13 +294,11 @@ public class MainWindow implements GuiInterface
 				{
 					txtBandwidth.setText(BANDWIDTH);
 					numBAndwidth.setModel(new SpinnerNumberModel(50, 1, 150, 1));
-					// onConnectionChange(true);
 				}
 				else
 				{
 					txtBandwidth.setText(LOW_FREQH);
 					numBAndwidth.setModel(new SpinnerNumberModel(1000, 950, 2150, 1));
-					// onConnectionChange(false);
 				}
 			}
 		});
@@ -399,6 +400,7 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(lblLed);
 		lblLed.setIcon(Red_icon);
 		//txtStatus.setBounds(0, f.getHeight()-35, f.getWidth(), 444);
+		/*
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
 			txtStatus.setBounds(10, f.getBounds().getSize().height-50, f.getBounds().getSize().width, 30);
@@ -406,7 +408,7 @@ public class MainWindow implements GuiInterface
 		else
 		{
 			txtStatus.setBounds(10, f.getBounds().getSize().height-30, f.getBounds().getSize().width, 30);
-		}
+		}*/
 		pnlRate.setLayout(null);
 		pnlRate.setName("");
 		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
@@ -420,13 +422,8 @@ public class MainWindow implements GuiInterface
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
-		panel.setBounds(0, 553, 481, 27);
-		
-		f.getContentPane().add(panel);
-		panel.setLayout(null);
-		txtStatus.setBounds(0, 0, 481, 27);
-		
-		panel.add(txtStatus);
+		txtStatus.setBounds(12, 570, 463, 27);
+		f.getContentPane().add(txtStatus);
 		
 		f.setTitle(f.getTitle() + " - Ver 1.0");
 		
@@ -531,12 +528,20 @@ public class MainWindow implements GuiInterface
 		if (status)
 		{
 			lblLed.setIcon(Green_icon);
-			_connectionStatus = true;
+			if (!_connectionStatus)
+			{
+				UpdateStatus("Ettus connected to the server");
+				_connectionStatus = true;
+			}
 		}
 		else
 		{
 			lblLed.setIcon(Red_icon);
-			_connectionStatus = false;
+			if (_connectionStatus)
+			{
+				UpdateStatus("Ettus disconnected from the server");
+				_connectionStatus = false;
+			}
 		}
 	}
 
@@ -557,6 +562,7 @@ public class MainWindow implements GuiInterface
 		}
 		// Now edit your gui objects
 		txtStatus.setText(status);
+		logger.debug(status);
 	}
 
 	private void ShowSpectrumWindow()
@@ -575,7 +581,7 @@ public class MainWindow implements GuiInterface
 			return;
 		}
 
-		double CenterFrequncy = (double) ((Integer) numCenter.getValue()) * 1e6;
+		double CenterFrequncy = (double) ((Double) numCenter.getValue()) * 1e6;
 
 		double Gain = -1; // Automatic;
 		if (cmbAgc.getSelectedIndex() == 1) // Manual
@@ -614,20 +620,20 @@ public class MainWindow implements GuiInterface
 		}
 		
 		double Rate = getRate();
-		double dNumSamples = 0;
+		int dNumSamples = 0;
 		double Val = (double) (Integer) numFileSize.getValue();
 		switch (cmbFileSize.getSelectedIndex())
 		{
 		case 0: // Time
-			dNumSamples = Math.ceil(Val * Rate);
+			dNumSamples = (int)Math.ceil(Val * Rate);
 			break;
 
 		case 1:
-			dNumSamples = Val * 1e6;
+			dNumSamples = (int)(Val * 1e6);
 			break;
 
 		case 2:
-			dNumSamples = 1073741824 * Val * 0.25;
+			dNumSamples = (int)(1073741824 * Val * 0.25);
 			break;
 		}
 
@@ -667,11 +673,12 @@ public class MainWindow implements GuiInterface
 
 		
 		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
+		String DataFile = getFilename();
 
-				double CentralFreq = 0;
+		double CentralFreq = 0;
 		try
 		{
-			CentralFreq = getF0();
+			CentralFreq = getF0(DataFile);
 		}
 		catch (Exception e)
 		{
@@ -682,17 +689,10 @@ public class MainWindow implements GuiInterface
 
 		Boolean Loop = chckbxLoop.isSelected();
 		
-		double Rate = getRate(getFilename());
-		if (Rate == 0)
-		{
-			Rate = getRate();
-		}
-		else
-		{
-			cmbRate.setSelectedItem(Rate);
-		}
+		double Rate = getRate(DataFile);
 		
-		client.SendPlayCommand(CentralFreq, Rate, getGain(), getBW(), Loop, getFilename(), TransmitExe);
+		
+		client.SendPlayCommand(CentralFreq, Rate, getGain(DataFile), getBW(), Loop, DataFile, TransmitExe);
 	}
 
 	public void OperationCompleted()
@@ -703,7 +703,7 @@ public class MainWindow implements GuiInterface
 	private double getF0() throws Exception
 	{
 		double f0;
-		if (cmbCenter.getSelectedIndex() != 0) // Center
+		if (cmbCenter.getSelectedIndex() == 0) // Center
 		{
 			f0 = (double) ((Integer) numCenter.getValue()) * 1e6;
 		}
@@ -722,10 +722,58 @@ public class MainWindow implements GuiInterface
 		return f0;
 	}
 	
+	private double getF0(String Filename)
+	{
+		double F0 = 1500e6;
+		try 
+		{
+			F0 = getF0();
+		} 
+		catch (Exception e1) 
+		{
+			logger.error("Couldn't get Frequency from GUI. Default value is 1500", e1);
+		}
+		try
+		{
+			FileInputStream is = new FileInputStream (Filename);
+			DataInputStream din = new DataInputStream(is);
+			
+			// Check magic key / Header
+			byte [] MagicBytes = new byte[8];
+			din.read(MagicBytes);
+			String MagicKey = MagicBytes.toString();
+			
+			if (MagicKey.equals("RECOrder"))
+			{
+				/*
+				
+				fwrite( &version,1,8,outfile);
+				fwrite( &Rate,1,8,outfile);
+				fwrite( &Freq,1,8,outfile);
+				fwrite( &Gain,1,8,outfile);
+				*/
+			// Read the rate as double (64 bit)
+				din.readDouble(); // Version
+				din.readDouble(); // Rate
+				F0 = din.readDouble(); // Freq
+			}
+			
+			din.close();
+			is.close();
+		}
+		catch (Exception e)		
+		{
+			logger.error("Error extracting Rate from the samples transmit file",e);
+		}
+		cmbCenter.setSelectedIndex(0);
+		numCenter.setValue(F0/1e6);
+		return F0;
+	}
+	
 	private double getBW()
 	{
 		double bw = 50e6;
-		if (cmbCenter.getSelectedIndex() != 0) // Center
+		if (cmbCenter.getSelectedIndex() == 0) // Center
 		{
 			bw = (double) ((Integer) numBAndwidth.getValue()) * 1e6;
 		}
@@ -738,7 +786,7 @@ public class MainWindow implements GuiInterface
 			}
 			else
 			{
-				bw = (Integer) numCenter.getValue() - (Integer) numBAndwidth.getValue();
+				bw = ((Integer) numCenter.getValue() - (Integer) numBAndwidth.getValue()) * 1e6;
 			}
 			
 		}
@@ -752,6 +800,46 @@ public class MainWindow implements GuiInterface
 		{
 			Gain = (double) ((Integer) numAgc.getValue());
 		}
+		return Gain;
+	}
+	
+	private double getGain(String Filename)
+	{
+		double Gain = 0;
+		try
+		{
+			FileInputStream is = new FileInputStream (Filename);
+			DataInputStream din = new DataInputStream(is);
+			
+			// Check magic key / Header
+			byte [] MagicBytes = new byte[8];
+			din.read(MagicBytes);
+			String MagicKey = MagicBytes.toString();
+			
+			if (MagicKey.equals("RECOrder"))
+			{
+				/*
+				
+				fwrite( &version,1,8,outfile);
+				fwrite( &Rate,1,8,outfile);
+				fwrite( &Freq,1,8,outfile);
+				fwrite( &Gain,1,8,outfile);
+				*/
+			// Read the rate as double (64 bit)
+				din.readDouble(); // Version
+				din.readDouble(); // Rate
+				din.readDouble(); // Freq
+				Gain = din.readDouble(); // Gain
+			}
+			din.close();
+			is.close();
+		}
+		catch (Exception e)		
+		{
+			logger.error("Error extracting Rate from the samples transmit file",e);
+		}
+		cmbAgc.setSelectedIndex(1);
+		numAgc.setValue(Gain);
 		return Gain;
 	}
 	
@@ -772,17 +860,31 @@ public class MainWindow implements GuiInterface
 
 	private double getRate(String Filename)
 	{
-		double Rate = 0;
+		double Rate = getRate();
 		try
 		{
 			FileInputStream is = new FileInputStream (Filename);
 			DataInputStream din = new DataInputStream(is);
 			
-			// Check magic key
+			// Check magic key / Header
+			byte [] MagicBytes = new byte[8];
+			din.read(MagicBytes);
+			String MagicKey = MagicBytes.toString();
 			
-			// Read the rate as float/double
+			if (MagicKey.equals("RECOrder"))
+			{
+				/*
+				
+				fwrite( &version,1,8,outfile);
+				fwrite( &Rate,1,8,outfile);
+				fwrite( &Freq,1,8,outfile);
+				fwrite( &Gain,1,8,outfile);
+				*/
+			// Read the rate as double (64 bit)
+				din.readDouble(); // Version
+				Rate = din.readDouble(); // Version
 			Rate = din.readDouble();
-			
+			}
 			din.close();
 			is.close();
 		}
@@ -790,7 +892,15 @@ public class MainWindow implements GuiInterface
 		{
 			logger.error("Error extracting Rate from the samples transmit file",e);
 		}
-		
+		for (int i = 0; i < cmbRate.getItemCount(); i++)
+		{
+			if ((Rate/1e6) == Double.parseDouble(cmbRate.getItemAt(i).toString()))
+			{
+				cmbRate.setSelectedIndex(i); 
+				break;
+			}	
+		}
+
 		return Rate;
 	}
 	

@@ -25,7 +25,7 @@ public class Spectrum extends Operation
 			{
 				String vars[] =
 				{ super.exe_file, "--mode", "spec", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
-						"--gain", Double.toString(Gain), "--file", Filename
+						/*"--gain", Double.toString(Gain),*/ "--file", Filename
 				};
 				p = super.StartAction(vars);
 			}

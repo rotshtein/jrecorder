@@ -110,7 +110,7 @@ class ManagementClient extends WebSocketClient
 
 			if (h != null)
 			{
-				logger.info("Got header. Command = " + h.getOpcode());
+				//logger.debug("Got header. Command = " + h.getOpcode());
 			}
 			// int i = h.getOpcodeValue();
 			switch (h.getOpcode())
@@ -179,6 +179,7 @@ class ManagementClient extends WebSocketClient
 
 			case SPECTRUM_DATA:
 				SpectrumData sd = SpectrumData.parseFrom(h.getMessageData());
+				gui.UpdateStatus("Spectrum completed");
 				gui.ShowSpectrumData(sd.getMessageData().toByteArray());
 				break;
 				
@@ -239,7 +240,7 @@ class ManagementClient extends WebSocketClient
 	}
 
 	public Boolean SendRecordCommand(double CenterFrequncy, double Rate, double Gain, double bw, String Filename,
-			double NumberOfSampels, String RecordExe)
+			int NumberOfSampels, String RecordExe)
 	{
 		RecordCommand s = RecordCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain).setBw(bw)
 				.setFilename(Filename).setNumberOfSamples(NumberOfSampels).setApplicationExecute(RecordExe).build();
