@@ -22,7 +22,7 @@ public class Record extends Operation
 			try
 			{
 				String vars[] =
-				{ super.exe_file, "--mode", "record", "--freq", Double.toString(f0), " --rate", Double.toString(Rate),
+				{ super.exe_file, "--mode", "record", "--freq", Double.toString(f0), "--rate", Double.toString(Rate),
 						"--gain", Double.toString(Gain),/*"--bw", Double.toString(bw),*/  "--file", Filename, "--nsamps", Integer.toString(NumSamples)
 				};
 				p = super.StartAction(vars);

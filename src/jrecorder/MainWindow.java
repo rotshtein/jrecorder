@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.KeyStore;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -54,6 +56,62 @@ import javax.swing.border.EtchedBorder;
 
 public class MainWindow implements GuiInterface
 {
+	
+	class TransmitParameters
+	{
+		public final int NOT_VALID = -100; 
+		public double Version = -100;
+		public double Gain = -100;
+		public double F0 = -100;
+		public double Rate = -100;
+		
+		public TransmitParameters(String Filename)
+		{
+			try
+			{
+				FileInputStream is = new FileInputStream (Filename);
+				DataInputStream din = new DataInputStream(is);
+				
+				// Check magic key / Header
+				byte [] MagicBytes = new byte[8];
+				din.read(MagicBytes);
+				String MagicKey = new String(MagicBytes, "UTF-8");
+				
+				
+				if (MagicKey.equals("RECOrder"))
+				{
+					/*
+					c++ writer code
+					fwrite( &version,1,8,outfile);
+					fwrite( &Rate,1,8,outfile);
+					fwrite( &Freq,1,8,outfile);
+					fwrite( &Gain,1,8,outfile);
+					*/
+					
+					byte [] bytes = new byte[Double.BYTES];
+					
+					din.read(bytes); // Version
+					Version = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getDouble();
+					
+					din.read(bytes); // Rate
+					Rate = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getDouble();
+					
+					din.read(bytes); // Freq
+					F0 = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getDouble();
+					
+					din.read(bytes); // Gain
+					Gain = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getDouble();
+				}
+				
+				din.close();
+				is.close();
+			}
+			catch (Exception e)		
+			{
+				logger.error("Error extracting Rate from the samples transmit file",e);
+			}
+		}
+	}
 
 	final static Logger			logger			= Logger.getLogger("MainWindow");
 	private JFrame				f;
@@ -640,7 +698,7 @@ public class MainWindow implements GuiInterface
 			break;
 
 		case 2:
-			dNumSamples = (int)(1e9/8 * Val);//(int)(1073741824 * Val * 0.25);
+			dNumSamples = (int)(1e9/4 * Val);//(int)(1073741824 * Val * 0.25);
 			break;
 		}
 
@@ -682,24 +740,53 @@ public class MainWindow implements GuiInterface
 		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
 		String DataFile = getFilename();
 
-		double CentralFreq = 0;
-		try
+		TransmitParameters tp = new TransmitParameters(DataFile);
+		
+		
+		double CentralFreq = tp.F0;
+		if (CentralFreq != tp.NOT_VALID)
 		{
-			CentralFreq = getF0(DataFile);
+			cmbCenter.setSelectedIndex(0);
+			numCenter.setValue(CentralFreq/1e6);
 		}
-		catch (Exception e)
+		else
 		{
-			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",
-					JOptionPane.ERROR_MESSAGE);
-			return;
+			try 
+			{
+				CentralFreq = getF0();
+			} 
+			catch (Exception e) 
+			{
+				JOptionPane.showMessageDialog(f, "Low frequncy is higher the High Frequncy. Please correct.",
+						"Transmit", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+		}
+
+		double Rate = tp.Rate;
+		if (Rate != tp.NOT_VALID)
+		{
+		}
+		else
+		{
+			Rate = getRate();
+		}
+
+		
+		double Gain = tp.Gain;
+		if (Gain != tp.NOT_VALID)
+		{
+			numAgc.setValue(Gain);
+		}
+		else
+		{
+			Gain = getGain();
 		}
 
 		Boolean Loop = chckbxLoop.isSelected();
+
 		
-		double Rate = getRate(DataFile);
-		
-		
-		client.SendPlayCommand(CentralFreq, Rate, getGain(DataFile), getBW(), Loop, DataFile, TransmitExe);
+		client.SendPlayCommand(CentralFreq, Rate, Gain, getBW(), Loop, DataFile, TransmitExe);
 	}
 
 	public void OperationCompleted()
@@ -727,54 +814,6 @@ public class MainWindow implements GuiInterface
 			f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
 		}
 		return f0;
-	}
-	
-	private double getF0(String Filename)
-	{
-		double F0 = 1500e6;
-		try 
-		{
-			F0 = getF0();
-		} 
-		catch (Exception e1) 
-		{
-			logger.error("Couldn't get Frequency from GUI. Default value is 1500", e1);
-		}
-		try
-		{
-			FileInputStream is = new FileInputStream (Filename);
-			DataInputStream din = new DataInputStream(is);
-			
-			// Check magic key / Header
-			byte [] MagicBytes = new byte[8];
-			din.read(MagicBytes);
-			String MagicKey = MagicBytes.toString();
-			
-			if (MagicKey.equals("RECOrder"))
-			{
-				/*
-				
-				fwrite( &version,1,8,outfile);
-				fwrite( &Rate,1,8,outfile);
-				fwrite( &Freq,1,8,outfile);
-				fwrite( &Gain,1,8,outfile);
-				*/
-			// Read the rate as double (64 bit)
-				din.readDouble(); // Version
-				din.readDouble(); // Rate
-				F0 = din.readDouble(); // Freq
-			}
-			
-			din.close();
-			is.close();
-		}
-		catch (Exception e)		
-		{
-			logger.error("Error extracting Rate from the samples transmit file",e);
-		}
-		cmbCenter.setSelectedIndex(0);
-		numCenter.setValue(F0/1e6);
-		return F0;
 	}
 	
 	private double getBW()
@@ -810,46 +849,7 @@ public class MainWindow implements GuiInterface
 		return Gain;
 	}
 	
-	private double getGain(String Filename)
-	{
-		double Gain = 0;
-		try
-		{
-			FileInputStream is = new FileInputStream (Filename);
-			DataInputStream din = new DataInputStream(is);
-			
-			// Check magic key / Header
-			byte [] MagicBytes = new byte[8];
-			din.read(MagicBytes);
-			String MagicKey = MagicBytes.toString();
-			
-			if (MagicKey.equals("RECOrder"))
-			{
-				/*
-				
-				fwrite( &version,1,8,outfile);
-				fwrite( &Rate,1,8,outfile);
-				fwrite( &Freq,1,8,outfile);
-				fwrite( &Gain,1,8,outfile);
-				*/
-			// Read the rate as double (64 bit)
-				din.readDouble(); // Version
-				din.readDouble(); // Rate
-				din.readDouble(); // Freq
-				Gain = din.readDouble(); // Gain
-			}
-			din.close();
-			is.close();
-		}
-		catch (Exception e)		
-		{
-			logger.error("Error extracting Rate from the samples transmit file",e);
-		}
-		cmbAgc.setSelectedIndex(1);
-		numAgc.setValue(Gain);
-		return Gain;
-	}
-	
+		
 	private double getRate()
 	{
 		double Rate = Double.parseDouble(cmbRate.getSelectedItem().toString());
@@ -865,51 +865,6 @@ public class MainWindow implements GuiInterface
 		return Rate;
 	}
 
-	private double getRate(String Filename)
-	{
-		double Rate = getRate();
-		try
-		{
-			FileInputStream is = new FileInputStream (Filename);
-			DataInputStream din = new DataInputStream(is);
-			
-			// Check magic key / Header
-			byte [] MagicBytes = new byte[8];
-			din.read(MagicBytes);
-			String MagicKey = MagicBytes.toString();
-			
-			if (MagicKey.equals("RECOrder"))
-			{
-				/*
-				
-				fwrite( &version,1,8,outfile);
-				fwrite( &Rate,1,8,outfile);
-				fwrite( &Freq,1,8,outfile);
-				fwrite( &Gain,1,8,outfile);
-				*/
-			// Read the rate as double (64 bit)
-				din.readDouble(); // Version
-				Rate = din.readDouble(); // Version
-			Rate = din.readDouble();
-			}
-			din.close();
-			is.close();
-		}
-		catch (Exception e)		
-		{
-			logger.error("Error extracting Rate from the samples transmit file",e);
-		}
-		for (int i = 0; i < cmbRate.getItemCount(); i++)
-		{
-			if ((Rate/1e6) == Double.parseDouble(cmbRate.getItemAt(i).toString()))
-			{
-				cmbRate.setSelectedIndex(i); 
-				break;
-			}	
-		}
-
-		return Rate;
-	}
 	
 	@Override
 	public void ShowSpectrumData(final byte[] data) 

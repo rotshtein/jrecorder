@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import javax.swing.JFrame;
 
@@ -13,7 +15,6 @@ import org.jfree.chart.ChartFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.XYSeries;
@@ -46,49 +47,48 @@ public class SpectrumWindow
 	public void Show(byte [] rawdata)// throws FileNotFoundException
 	{
 		final NumberAxis domainAxis = new NumberAxis("[MHz]");
-		domainAxis.setRange(0.00, 1024 * 32);
+		
 
 		XYSeriesCollection dataset = new XYSeriesCollection();
-		//DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
 		XYSeries series1 = new XYSeries("RF");
-		
-		
 		
 		try
 		{
 			ByteArrayInputStream  insputStream =  new ByteArrayInputStream(rawdata);
 			DataInputStream dIn = new DataInputStream(insputStream);
-			double y;
-			double x = (centerFrequency/1e6) - (0xFFFF /2);
+			float x, y;
+			byte [] bytes = new byte[Float.BYTES];
 			
 			while (dIn.available() > 0)
 			{
-				y = dIn.readFloat();
-				//y = dIn.readFloat();
-				series1.add(x++, y);
-				//dataset.addValue(x, "RF", Float.toString(y));
+				dIn.read(bytes); // Version
+				x = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+				
+				dIn.read(bytes); // Version
+				y = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+				
+				series1.add(x,y);
 			}
 			dIn.close();
 			insputStream.close();
-			/*
-			 * for (int i = 0; i < (1024*32); i++) { series1.add(i, i); }
-			 */
 		}
 		catch (Exception e)
 		{
 			logger.error("Failed getting spectrum info", e);
 			return;
 		}
+		
+		double x1 = series1.getMinX()-20e6;
+		double x2 = series1.getMaxX()+20e6;
+		
+		domainAxis.setRange(x1,x2);
 		dataset.addSeries(series1);
 		
 		JFreeChart chart = ChartFactory.createXYLineChart("Spectrum", "Frequncy [MHz]", "db", dataset);
-		//JFreeChart chart = ChartFactory.createLineChart("Spectrum", "Frequncy [MHz]", "db", dataset,PlotOrientation.VERTICAL, true,true,false);
 		//final XYPlot plot = chart.getXYPlot();
 		//ValueAxis axis = plot.getDomainAxis();
-		//axis.setRange(0, 32000);
-		
 
-		//axis.setFixedAutoRange(60000.0);
+		//axis.setFixedAutoRange(x2-x1);
 
 		final JFrame frame = new JFrame("Specturm");
 		frame.addWindowListener(new WindowAdapter()
