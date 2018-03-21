@@ -53,7 +53,7 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	{
 		try
 		{
-			this.stop();
+			this.stop(1);
 		}
 		catch (Exception e)
 		{
