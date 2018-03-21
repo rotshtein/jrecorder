@@ -118,9 +118,10 @@ public class MainWindow implements GuiInterface
 			@Override
 			public void windowClosing(WindowEvent arg0)
 			{
+				
 				if (server != null)
 				{
-					server = null;
+					server.Stop();
 				}
 				logger.debug("Exit");
 				Stop();

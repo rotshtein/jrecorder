@@ -1,7 +1,5 @@
 package jrecorder;
 
-
-
 import org.apache.log4j.Logger;
 
 public class CheckConnectivity implements Runnable

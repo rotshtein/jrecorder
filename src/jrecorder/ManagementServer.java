@@ -51,9 +51,15 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	
 	public void Stop()
 	{
+		logger.info("Clossing connections");
 		try
 		{
 			this.stop(1);
+			for (WebSocket conn : this.connections())
+			{
+				logger.info("\tClossing connection " + conn.getLocalSocketAddress().getHostString());
+				conn.close();
+			}
 		}
 		catch (Exception e)
 		{
