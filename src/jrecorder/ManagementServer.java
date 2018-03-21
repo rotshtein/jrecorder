@@ -25,6 +25,8 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	CheckConnectivity											connectivityThread;
 	BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>>	queue				= null;
 	Boolean														connectionStatus	= false;
+	Boolean _stop = false;
+	Thread monitorProcesThread = null;
 
 	public ManagementServer(InetSocketAddress address, String EttusAddress)
 	{
@@ -37,6 +39,8 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 			queue = new ArrayBlockingQueue<SimpleEntry<byte[], WebSocket>>(1);
 			parser = new ManagmentParser("./recorder.ini", queue, this);
 			parser.start();
+			monitorProcesThread = new Thread(MonitorProcesThread);
+			monitorProcesThread.start();
 		}
 		catch (Exception e)
 		{
@@ -52,6 +56,7 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	public void Stop()
 	{
 		logger.info("Clossing connections");
+		_stop = true;
 		try
 		{
 			this.stop(1);
@@ -65,6 +70,19 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 		{
 			logger.error("Error while closing Web socket server", e);
 		}
+		
+		if (monitorProcesThread != null)
+		{
+			try
+			{
+				monitorProcesThread.join(100);
+			}
+			catch (InterruptedException e)
+			{
+				logger.error("Error while joining the MonitorProcessThread", e);
+			}
+		}
+		
 		connectivityThread.Stop();
 	}
 
@@ -111,7 +129,7 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 	@Override
 	public void onError(WebSocket conn, Exception ex)
 	{
-		logger.error("an error occured on connection ", ex);
+		logger.error("an error occured on connection " + conn.getRemoteSocketAddress(), ex);
 	}
 
 	@Override
@@ -139,4 +157,31 @@ public class ManagementServer extends WebSocketServer implements ConnectionInter
 
 		conn.send(h.toByteArray());
 	}
+	
+	 Runnable MonitorProcesThread = new Runnable()
+	 {
+		    public void run()
+		    {
+		    	Boolean LastStatus = parser.isRunning();
+				while (!_stop)
+				{
+					if (LastStatus != parser.isRunning())
+					{
+						LastStatus = parser.isRunning();
+						if (!LastStatus)
+						{
+							parser.UpdateStatus("Process stoped");
+						}
+					}
+					try
+					{
+						Thread.sleep(1000);
+					}
+					catch (InterruptedException e)
+					{
+						logger.error("Failed to sleep",e);
+					}
+				}  
+		    }
+	 };
 }
