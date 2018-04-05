@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.KeyStore;
+import java.util.Locale;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -186,7 +187,7 @@ public class MainWindow implements GuiInterface
 				System.exit(0);
 			}
 		});
-		f.setSize(new Dimension(487, 641));
+		f.setSize(new Dimension(487, 609));
 		f.setType(Type.UTILITY);
 		f.setResizable(false);
 		f.setTitle("RF Recorder");
@@ -459,11 +460,20 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(lblLed);
 		lblLed.setIcon(Red_icon);
 		panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Status Bar", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel.setBounds(10, 555, 461, 55);
+		//panel.setBounds(0, 574, 481, 38);
+		String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+		if (OS.indexOf("nux") >= 0)
+		{
+			panel.setBounds(0, f.getHeight()-40, f.getWidth()-5, 38);
+		}
+		else
+		{
+			panel.setBounds(0, f.getHeight()-70, f.getWidth()-5, 38);
+		}
 		
 		f.getContentPane().add(panel);
 		panel.setLayout(null);
-		txtStatus.setBounds(6, 16, 443, 33);
+		txtStatus.setBounds(10, 11, 465, 20);
 		panel.add(txtStatus);
 		txtStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		txtStatus.setToolTipText("hello");
