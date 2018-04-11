@@ -17,6 +17,7 @@ public abstract class Operation implements Runnable
 	String			operation;
 	Thread			procMonThread;
 	Thread			feedbackFileThread;
+	Boolean			stopReadingFeedbackFile = false;
 
 	public Operation(String Exe, String messageFile, GuiInterface gui, String Operation)
 	{
@@ -71,39 +72,60 @@ public abstract class Operation implements Runnable
 		return false;
 	}
 
+	public void Stop()
+	{
+		logger.debug("Request to exit Feedback reader using Stop()");
+		stopReadingFeedbackFile = true;
+	}
+	
 	@Override
 	public void run()
 	{
+		//stopReadingFeedbackFile = false;
 		FeedbackFile ff = null;
 		String message;
 
 		if (messageFile != null)
 		{
+			
+
 			for (int i = 0; i < 120; i++)
 			{
+				if (stopReadingFeedbackFile) 
+				{
+					logger.debug("Exiting Feedback reader ofter Stop()");
+					return;
+				}
+				
 				try
 				{
 					ff = new FeedbackFile(messageFile);
+					break;
 				}
 				catch (Exception e)
 				{
-					try
-					{
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e1)
-					{
-	
-					}
+					logger.debug("No feedback file yet");
 				}
+				
+				try
+				{
+					Thread.sleep(500);
+				}
+				catch (InterruptedException e1)
+				{
+					logger.debug("Error in Thread.Sleep", e1);
+				}
+
 			}
+			
 			if (ff == null)
 			{
 				gui.UpdateStatus("Faild in open feedback file");
 				logger.error("Faild in open feedback file");
 				return;
 			}
-			while (p.isAlive())
+			
+			while (p.isAlive() | stopReadingFeedbackFile)
 			{
 				// Read feedback file
 				if ((message = ff.GetNext()) != null)

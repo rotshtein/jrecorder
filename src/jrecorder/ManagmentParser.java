@@ -32,6 +32,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 	ProcMon														procMon				= null;
 	Boolean														connectionStatus	= false;
 	BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>>	queue				= null;
+	Operation operation;
 	
 
 	public ManagmentParser(String ParametersFile, BlockingQueue<AbstractMap.SimpleEntry<byte[], WebSocket>> queue,
@@ -108,7 +109,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			Kill();
 			
 			Spectrum st = new Spectrum(SpectrumExe,FeedbackFile, this);
-			
+			operation = st;
 			try 
 			{
 				procMon = st.Start(s.getFrequency(), s.getRate(), s.getGain(), s.getFilename());
@@ -172,6 +173,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			}
 			
 			Record rec = new Record(r.getApplicationExecute(), FeedbackFile, this);
+			operation = rec;
 			try
 			{
 				Kill();
@@ -217,6 +219,7 @@ public class ManagmentParser extends Thread implements GuiInterface
 			}
 			
 			Transmit tx = new Transmit(p.getApplicationExecute(), FeedbackFile, this);
+			operation = tx;
 			try
 			{
 				Kill();
@@ -236,6 +239,16 @@ public class ManagmentParser extends Thread implements GuiInterface
 
 		case STOP_CMD:
 			SendAck(h, conn);
+			if (operation != null)
+			{
+				logger.debug("operation stopped");
+				operation.Stop();
+			}
+			else
+			{
+				logger.debug("operation is null");
+			}
+			
 			if (procMon == null)
 			{
 				SendStatusMessage("Process not running", conn);
