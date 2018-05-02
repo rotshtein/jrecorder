@@ -34,8 +34,8 @@ public abstract class Operation implements Runnable
 			try
 			{
 				ProcessBuilder builder = new ProcessBuilder(vars);
-				builder.redirectOutput(new File("./out.txt"));
-				builder.redirectError(new File("./error.txt"));
+				builder.redirectOutput(new File(messageFile));
+				builder.redirectError(new File(messageFile));
 				p = builder.start(); // may throw IOException
 				String CommandLine = "";
 				for(String var : vars)
