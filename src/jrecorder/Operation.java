@@ -113,7 +113,7 @@ public abstract class Operation implements Runnable
 				}
 				catch (InterruptedException e1)
 				{
-					logger.debug("Error in Thread.Sleep", e1);
+					//logger.debug("Error in Thread.Sleep", e1);
 				}
 
 			}
