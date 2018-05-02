@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.KeyStore;
 import java.util.Locale;
+import java.util.prefs.Preferences;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -53,6 +54,8 @@ import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 
 public class MainWindow implements GuiInterface
@@ -156,6 +159,8 @@ public class MainWindow implements GuiInterface
 	private final JComboBox cmbRate = new JComboBox();
 	private final JLabel txtStatus = new JLabel("Statusbar");
 	private final JPanel panel = new JPanel();
+	
+	private final String LAST_USED_FOLDER = "LAST_USED_FOLDER";
 	
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
@@ -370,6 +375,11 @@ public class MainWindow implements GuiInterface
 		cmbCenter.setBounds(10, 23, 185, 23);
 
 		pnlFrequency.add(cmbCenter);
+		numCenter.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) 
+			{
+			}
+		});
 		numCenter.setModel(new SpinnerNumberModel(1000, 950, 2150, 1));
 		numCenter.setFont(new Font("Arial", Font.PLAIN, 14));
 		numCenter.setBounds(303, 23, 143, 23);
@@ -416,13 +426,16 @@ public class MainWindow implements GuiInterface
 			public void actionPerformed(ActionEvent event)
 			{
 				int returnVal;
-				JFileChooser jfc = new JFileChooser();
+				
+				Preferences prefs = Preferences.userRoot().node(getClass().getName());
+				JFileChooser jfc = new JFileChooser(prefs.get(LAST_USED_FOLDER, new File(".").getAbsolutePath()));
 				if (rdbtnRecord.isSelected()) returnVal = jfc.showSaveDialog(null);
 				else returnVal = jfc.showOpenDialog(null);
 				if (returnVal == JFileChooser.APPROVE_OPTION)
 				{
 					File file = jfc.getSelectedFile();
 					txtFileName.setText(file.getAbsolutePath());
+				    prefs.put(LAST_USED_FOLDER, jfc.getSelectedFile().getParent());
 				}
 			}
 		});
@@ -712,9 +725,15 @@ public class MainWindow implements GuiInterface
 			break;
 		}
 
+		if (dNumSamples == 0)
+		{
+			JOptionPane.showMessageDialog(f, "Recorder data file size is 0. Please spcify sample size", "Rercord",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		String RecorderExe = param.Get("RecorderExec", "./Spectrum");
 
-		if (getFilename() == "")
+		if (getFilename().equals(""))
 		{
 			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
 					JOptionPane.ERROR_MESSAGE);
@@ -750,6 +769,12 @@ public class MainWindow implements GuiInterface
 		String TransmitExe = param.Get("TransmitExec", "./Spectrum");
 		String DataFile = getFilename();
 
+		if (DataFile.equals(""))
+		{
+			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Transmit",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		TransmitParameters tp = new TransmitParameters(DataFile);
 		
 		
