@@ -246,7 +246,7 @@ class ManagementClient extends WebSocketClient
 	}
 
 	public Boolean SendRecordCommand(double CenterFrequncy, double Rate, double Gain, double bw, String Filename,
-			int NumberOfSampels, String RecordExe)
+			long NumberOfSampels, String RecordExe)
 	{
 		RecordCommand s = RecordCommand.newBuilder().setFrequency(CenterFrequncy).setRate(Rate).setGain(Gain).setBw(bw)
 				.setFilename(Filename).setNumberOfSamples(NumberOfSampels).setApplicationExecute(RecordExe).build();

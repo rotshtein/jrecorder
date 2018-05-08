@@ -133,7 +133,7 @@ public class MainWindow implements GuiInterface
 	@SuppressWarnings("rawtypes")
 	private final JComboBox		cmbCenter			= new JComboBox();
 	private final JSpinner		numCenter			= new JSpinner();
-	private final JSpinner		numBAndwidth		= new JSpinner();
+	private final JSpinner		numBandwidth		= new JSpinner();
 	private final JTextPane		txtBandwidth		= new JTextPane();
 	private final JPanel		pnlAgc				= new JPanel();
 	@SuppressWarnings("rawtypes")
@@ -358,12 +358,12 @@ public class MainWindow implements GuiInterface
 				if (event.getItem().toString().startsWith(cmbCenter.getItemAt(0).toString()))
 				{
 					txtBandwidth.setText(BANDWIDTH);
-					numBAndwidth.setModel(new SpinnerNumberModel(50, 1, 150, 1));
+					numBandwidth.setModel(new SpinnerNumberModel(50, 1, 1200, 1));
 				}
 				else
 				{
 					txtBandwidth.setText(LOW_FREQH);
-					numBAndwidth.setModel(new SpinnerNumberModel(1000, 950, 2150, 1));
+					numBandwidth.setModel(new SpinnerNumberModel(1000, 950, 2150, 1));
 				}
 			}
 		});
@@ -385,11 +385,11 @@ public class MainWindow implements GuiInterface
 		numCenter.setBounds(303, 23, 143, 23);
 
 		pnlFrequency.add(numCenter);
-		numBAndwidth.setModel(new SpinnerNumberModel(10, 1, 150, 1));
-		numBAndwidth.setFont(new Font("Arial", Font.PLAIN, 14));
-		numBAndwidth.setBounds(303, 57, 143, 23);
+		numBandwidth.setModel(new SpinnerNumberModel(10, 1, 150, 1));
+		numBandwidth.setFont(new Font("Arial", Font.PLAIN, 14));
+		numBandwidth.setBounds(303, 57, 143, 23);
 
-		pnlFrequency.add(numBAndwidth);
+		pnlFrequency.add(numBandwidth);
 		txtBandwidth.setText("Bandwidth   [MHz]");
 		txtBandwidth.setFont(new Font("Arial", Font.PLAIN, 14));
 		txtBandwidth.setEditable(false);
@@ -505,7 +505,7 @@ public class MainWindow implements GuiInterface
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
 		
-		f.setTitle(f.getTitle() + " - Ver 1.1");
+		f.setTitle(f.getTitle() + " - Ver 1.2");
 		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
@@ -647,6 +647,7 @@ public class MainWindow implements GuiInterface
 
 	private void ShowSpectrumWindow()
 	{
+		
 		if (!_connectionStatus)
 		{
 			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address",
@@ -700,34 +701,49 @@ public class MainWindow implements GuiInterface
 
 	void Record()
 	{
+		File f = new File (getFilename());
+		if (f.exists())
+		{
+			
+			int n = JOptionPane.showConfirmDialog(
+		            null,
+		            "Recorder data file already exists. Do you want to continue?",
+		            "Record",
+		            JOptionPane.YES_NO_OPTION);
+	        if(n == 1)
+	        {
+	        	return;
+	        }
+		}
+
 		if (!_connectionStatus)
 		{
-			JOptionPane.showMessageDialog(f, "No connection with the server. Please check wiring and IP address",
+			JOptionPane.showMessageDialog(null, "No connection with the server. Please check wiring and IP address",
 					"Record", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
 		double Rate = getRate();
-		int dNumSamples = 0;
+		long dNumSamples = 0;
 		double Val = (double) (Integer) numFileSize.getValue();
 		switch (cmbFileSize.getSelectedIndex())
 		{
 		case 0: // Time
-			dNumSamples = (int)Math.ceil(Val * Rate);
+			dNumSamples = (long)Math.ceil(Val * Rate);
 			break;
 
 		case 1:
-			dNumSamples = (int)(Val * 1e6);
+			dNumSamples = (long)(Val * 1e6);
 			break;
 
 		case 2:
-			dNumSamples = (int)(1e9/4 * Val);//(int)(1073741824 * Val * 0.25);
+			dNumSamples = (long)(1e9/4 * Val);//(int)(1073741824 * Val * 0.25);
 			break;
 		}
 
 		if (dNumSamples == 0)
 		{
-			JOptionPane.showMessageDialog(f, "Recorder data file size is 0. Please spcify sample size", "Rercord",
+			JOptionPane.showMessageDialog(null, "Recorder data file size is 0. Please spcify sample size", "Rercord",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -735,10 +751,11 @@ public class MainWindow implements GuiInterface
 
 		if (getFilename().equals(""))
 		{
-			JOptionPane.showMessageDialog(f, "Recorder data file not found. Please spcify filename", "Rercord",
+			JOptionPane.showMessageDialog(null, "Recorder data file not found. Please spcify filename", "Rercord",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+		
 
 		double CentralFreq = 0;
 		try
@@ -747,7 +764,7 @@ public class MainWindow implements GuiInterface
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(f, "Low frequency is higher than High frequency.", "Rercord",
+			JOptionPane.showMessageDialog(null, "Low frequency is higher than High frequency.", "Rercord",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -838,14 +855,14 @@ public class MainWindow implements GuiInterface
 		}
 		else
 		{
-			if ((Integer) numBAndwidth.getValue() > (Integer) numCenter.getValue())
+			if ((Integer) numBandwidth.getValue() > (Integer) numCenter.getValue())
 			{
 				JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch", "Record",
 						JOptionPane.ERROR_MESSAGE);
 				throw new Exception("LowFreq > HighFreq");
 			}
 
-			double bw = ((Integer) numCenter.getValue()).doubleValue() - ((Integer) numBAndwidth.getValue()).doubleValue();
+			double bw = ((Integer) numCenter.getValue()).doubleValue() - ((Integer) numBandwidth.getValue()).doubleValue();
 			f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
 		}
 		return f0;
@@ -856,18 +873,18 @@ public class MainWindow implements GuiInterface
 		double bw = 50e6;
 		if (cmbCenter.getSelectedIndex() == 0) // Center
 		{
-			bw = (double) ((Integer) numBAndwidth.getValue()) * 1e6;
+			bw = (double) ((Integer) numBandwidth.getValue()) * 1e6;
 		}
 		else
 		{
-			if ((Integer) numBAndwidth.getValue() > (Integer) numCenter.getValue())
+			if ((Integer) numBandwidth.getValue() > (Integer) numCenter.getValue())
 			{
 				JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch", "Record",
 						JOptionPane.ERROR_MESSAGE);
 			}
 			else
 			{
-				bw = ((Integer) numCenter.getValue() - (Integer) numBAndwidth.getValue()) * 1e6;
+				bw = ((Integer) numCenter.getValue() - (Integer) numBandwidth.getValue()) * 1e6;
 			}
 			
 		}

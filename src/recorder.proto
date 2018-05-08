@@ -1,8 +1,8 @@
 syntax = "proto3";
-package recorder_proto;
+//package recorder_proto;
 
 /*************/
-/* Version 1 */
+/* Version 3 */
 /************/
 
 
@@ -61,7 +61,7 @@ message RecordCommand
 	double rate = 2;				// sampling rate in Hz - default 100e6
 	double gain = 3;				// gain - default is 0; can be 0-31.5
 	string filename = 4;			// The pull path for the recorded file location and name
-	int32  number_of_samples = 5;	// File size in samples
+	int64  number_of_samples = 5;	// File size in samples
 	string application_execute = 6;	// Binary to execute
 	double bw = 7;
 }
