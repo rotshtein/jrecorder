@@ -1,5 +1,5 @@
 syntax = "proto3";
-//package recorder_proto;
+package recorder_proto;
 
 /*************/
 /* Version 3 */
