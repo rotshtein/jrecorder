@@ -128,7 +128,7 @@ public abstract class Operation implements Runnable
 			while (p.isAlive() | stopReadingFeedbackFile)
 			{
 				// Read feedback file
-				if ((message = ff.GetNext()) != null)
+				while ((message = ff.GetNext()) != null)
 				{
 					// Update status bar
 					gui.UpdateStatus(message);
@@ -148,10 +148,15 @@ public abstract class Operation implements Runnable
 				}
 				catch (InterruptedException e)
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Failed to sleep",e);
 				}
 			}
+		}
+		
+		while ((message = ff.GetNext()) != null)
+		{
+			// Update status bar
+			gui.UpdateStatus(message);
 		}
 		logger.info("Exiting feednbak file thread");
 

@@ -43,6 +43,7 @@ public class ProcMon implements Runnable
 	{
 		try
 		{
+			_complete = false;
 			_proc.waitFor();
 		}
 		catch (InterruptedException e)

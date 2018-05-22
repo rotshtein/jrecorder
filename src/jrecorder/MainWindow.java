@@ -505,7 +505,7 @@ public class MainWindow implements GuiInterface
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
 		
-		f.setTitle(f.getTitle() + " - Ver 1.3");
+		f.setTitle(f.getTitle() + " - Ver 1.4");
 		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
