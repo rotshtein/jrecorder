@@ -500,12 +500,12 @@ public class MainWindow implements GuiInterface
 		f.getContentPane().add(pnlRate);
 		cmbRate.setBounds(10, 32, 181, 23);
 		pnlRate.add(cmbRate);
-		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "184.32", "100", "92.16", "50", "46.08", "25", "23.04"}));
+		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "184.32", "100", "92.16", "50", "46.08", "25", "23.04", "20", "12.5"}));
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
 		
-		f.setTitle(f.getTitle() + " - Ver 1.2");
+		f.setTitle(f.getTitle() + " - Ver 1.3");
 		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
