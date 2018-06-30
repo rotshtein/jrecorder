@@ -161,12 +161,21 @@ public class MainWindow implements GuiInterface
 	private final JPanel panel = new JPanel();
 	
 	private final String LAST_USED_FOLDER = "LAST_USED_FOLDER";
+	private final JCheckBox chckbxmhz = new JCheckBox("70MHz");
 	
 	@SuppressWarnings(
 	{ "unchecked", "rawtypes" })
 	public MainWindow()
 	{
-
+		try
+		{
+			param = new Parameters("recorder.ini");
+		}
+		catch (Exception e)
+		{
+			logger.error("Can't read configuration file", e);
+			return;
+		}
 		f = new JFrame("Main Windows");
 		f.getContentPane().setLocation(0, -208);
 		f.addWindowListener(new WindowAdapter()
@@ -192,7 +201,7 @@ public class MainWindow implements GuiInterface
 				System.exit(0);
 			}
 		});
-		f.setSize(new Dimension(487, 609));
+		f.setSize(new Dimension(488, 656));
 		f.setType(Type.UTILITY);
 		f.setResizable(false);
 		f.setTitle("RF Recorder");
@@ -204,7 +213,7 @@ public class MainWindow implements GuiInterface
 		pnlAgc.setName("AGC");
 		pnlAgc.setFont(new Font("Arial", Font.BOLD, 14));
 		pnlAgc.setBorder(BorderFactory.createTitledBorder("AGC"));
-		pnlAgc.setBounds(10, 181, 459, 66);
+		pnlAgc.setBounds(6, 213, 459, 66);
 
 		f.getContentPane().add(pnlAgc);
 		cmbAgc.addItemListener(new ItemListener()
@@ -296,7 +305,7 @@ public class MainWindow implements GuiInterface
 			}
 		});
 		btnSpectrum.setFont(new Font("Arial", Font.BOLD, 14));
-		btnSpectrum.setBounds(10, 475, 125, 23);
+		btnSpectrum.setBounds(15, 496, 125, 23);
 
 		f.getContentPane().add(btnSpectrum);
 		btnRecord.setFont(new Font("Arial", Font.BOLD, 14));
@@ -309,7 +318,7 @@ public class MainWindow implements GuiInterface
 				Record();
 			}
 		});
-		btnRecord.setBounds(147, 475, 103, 23);
+		btnRecord.setBounds(156, 496, 103, 23);
 
 		f.getContentPane().add(btnRecord);
 		btnTransmit.addActionListener(new ActionListener()
@@ -322,12 +331,12 @@ public class MainWindow implements GuiInterface
 		});
 		btnTransmit.setEnabled(false);
 		btnTransmit.setFont(new Font("Arial", Font.BOLD, 14));
-		btnTransmit.setBounds(289, 475, 103, 23);
+		btnTransmit.setBounds(275, 496, 103, 23);
 
 		f.getContentPane().add(btnTransmit);
 		chckbxLoop.setEnabled(false);
 		chckbxLoop.setFont(new Font("Arial", Font.PLAIN, 14));
-		chckbxLoop.setBounds(398, 475, 71, 23);
+		chckbxLoop.setBounds(394, 496, 71, 23);
 
 		f.getContentPane().add(chckbxLoop);
 		btnStop.addActionListener(new ActionListener()
@@ -340,11 +349,11 @@ public class MainWindow implements GuiInterface
 		});
 
 		btnStop.setFont(new Font("Arial", Font.BOLD, 14));
-		btnStop.setBounds(366, 505, 103, 23);
+		btnStop.setBounds(200, 546, 103, 23);
 
 		f.getContentPane().add(btnStop);
 		pnlFrequency.setFont(new Font("Arial", Font.BOLD, 14));
-		pnlFrequency.setBounds(10, 79, 459, 91);
+		pnlFrequency.setBounds(10, 79, 459, 124);
 
 		f.getContentPane().add(pnlFrequency);
 		pnlFrequency.setLayout(null);
@@ -397,6 +406,19 @@ public class MainWindow implements GuiInterface
 		txtBandwidth.setBounds(10, 57, 185, 23);
 
 		pnlFrequency.add(txtBandwidth);
+		chckbxmhz.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) 
+			{
+				cmbCenter.setEnabled(!chckbxmhz.isSelected());
+				numCenter.setEnabled(!chckbxmhz.isSelected());
+				numBandwidth.setEnabled(!chckbxmhz.isSelected());
+				txtBandwidth.setEnabled(!chckbxmhz.isSelected());
+			}
+		});
+		chckbxmhz.setFont(new Font("Arial", Font.PLAIN, 14));
+		chckbxmhz.setBounds(375, 93, 71, 23);
+		
+		pnlFrequency.add(chckbxmhz);
 
 		pnlAgc.add(numAgc);
 		pnlFileSize.setForeground(SystemColor.menu);
@@ -404,7 +426,7 @@ public class MainWindow implements GuiInterface
 		pnlFileSize.setName("AGC");
 		pnlFileSize.setFont(new Font("Arial", Font.BOLD, 14));
 		pnlFileSize.setBorder(BorderFactory.createTitledBorder("File Size"));
-		pnlFileSize.setBounds(10, 335, 459, 106);
+		pnlFileSize.setBounds(6, 367, 459, 106);
 
 		f.getContentPane().add(pnlFileSize);
 		cmbFileSize.setModel(new DefaultComboBoxModel(new String[]
@@ -436,6 +458,44 @@ public class MainWindow implements GuiInterface
 					File file = jfc.getSelectedFile();
 					txtFileName.setText(file.getAbsolutePath());
 				    prefs.put(LAST_USED_FOLDER, jfc.getSelectedFile().getParent());
+				    if (rdbtnTransmit.isSelected())
+				    {
+						
+						{
+							TransmitParameters tp = new TransmitParameters(file.getAbsolutePath());
+
+							if (tp.F0 != tp.NOT_VALID)
+							{
+								if (tp.F0 == 70e6)
+								{
+									chckbxmhz.setSelected(true);
+								}
+								else
+								{
+									chckbxmhz.setSelected(false);
+									cmbCenter.setSelectedIndex(0);
+									numCenter.setValue(tp.F0/1e6);
+								}
+							}
+							
+							if (tp.Rate != tp.NOT_VALID)
+							{
+								for (int i = 0; i < cmbRate.getItemCount(); i++) 
+								{
+									if (tp.Rate/1e6 == Double.parseDouble(cmbRate.getItemAt(i).toString()))
+									{
+										cmbRate.setSelectedIndex(i);
+										break;
+									}
+								}
+							}	
+							
+							if (tp.Gain != tp.NOT_VALID)
+							{
+								numAgc.setValue(tp.Gain);
+							}
+						}
+				    }
 				}
 			}
 		});
@@ -495,17 +555,18 @@ public class MainWindow implements GuiInterface
 		pnlRate.setName("");
 		pnlRate.setFont(new Font("Arial", Font.BOLD, 14));
 		pnlRate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Rate [MHz]", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		pnlRate.setBounds(10, 258, 459, 66);
+		pnlRate.setBounds(6, 290, 459, 66);
 		
 		f.getContentPane().add(pnlRate);
 		cmbRate.setBounds(10, 32, 181, 23);
 		pnlRate.add(cmbRate);
-		cmbRate.setModel(new DefaultComboBoxModel(new String[] {"200", "184.32", "100", "92.16", "50", "46.08", "25", "23.04", "20", "12.5"}));
+		String [] rates = param.Get("rates", "200,184.32,100,92.16,50,46.08,25,23.04,20,12.5").split(",");
+		cmbRate.setModel(new DefaultComboBoxModel(rates));
 		cmbRate.setToolTipText("Set the sampling rate in MHz");
 		cmbRate.setFont(new Font("Arial", Font.PLAIN, 14));
 		cmbRate.setBackground(Color.WHITE);
 		
-		f.setTitle(f.getTitle() + " - Ver 1.4");
+		f.setTitle(f.getTitle() + " - Ver 1.5");
 		
 		//statusBar = new StatusBar();
 		//f.getContentPane().add(statusBar, java.awt.BorderLayout.SOUTH);
@@ -516,15 +577,7 @@ public class MainWindow implements GuiInterface
 	private void Init()
 	{
 		
-		try
-		{
-			param = new Parameters("recorder.ini");
-		}
-		catch (Exception e)
-		{
-			logger.error("Can't read configuration file", e);
-			return;
-		}
+		
 
 		txtIP.setText(param.Get("ettus_address", "127.0.0.1"));
 
@@ -792,51 +845,24 @@ public class MainWindow implements GuiInterface
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		TransmitParameters tp = new TransmitParameters(DataFile);
 		
-		
-		double CentralFreq = tp.F0;
-		if (CentralFreq != tp.NOT_VALID)
+		double CentralFreq = 0;
+		try 
 		{
-			cmbCenter.setSelectedIndex(0);
-			numCenter.setValue(CentralFreq/1e6);
-		}
-		else
+			CentralFreq = getF0();
+		} 
+		catch (Exception e) 
 		{
-			try 
-			{
-				CentralFreq = getF0();
-			} 
-			catch (Exception e) 
-			{
-				JOptionPane.showMessageDialog(f, "Low frequncy is higher the High Frequncy. Please correct.",
-						"Transmit", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
+			JOptionPane.showMessageDialog(f, "Low frequncy is higher the High Frequncy. Please correct.",
+					"Transmit", JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 
-		double Rate = tp.Rate;
-		if (Rate != tp.NOT_VALID)
-		{
-		}
-		else
-		{
-			Rate = getRate();
-		}
-
+		double Rate = getRate();
+		double Gain = getGain();
 		
-		double Gain = tp.Gain;
-		if (Gain != tp.NOT_VALID)
-		{
-			numAgc.setValue(Gain);
-		}
-		else
-		{
-			Gain = getGain();
-		}
-
+	
 		Boolean Loop = chckbxLoop.isSelected();
-
 		
 		client.SendPlayCommand(CentralFreq, Rate, Gain, getBW(), Loop, DataFile, TransmitExe);
 	}
@@ -849,21 +875,28 @@ public class MainWindow implements GuiInterface
 	private double getF0() throws Exception
 	{
 		double f0;
-		if (cmbCenter.getSelectedIndex() == 0) // Center
+		if (chckbxmhz.isSelected())
 		{
-			f0 = ((Integer) numCenter.getValue()).doubleValue() * 1e6;
+			f0 = 70e6;
 		}
 		else
 		{
-			if ((Integer) numBandwidth.getValue() > (Integer) numCenter.getValue())
+			if (cmbCenter.getSelectedIndex() == 0) // Center
 			{
-				JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch", "Record",
-						JOptionPane.ERROR_MESSAGE);
-				throw new Exception("LowFreq > HighFreq");
+				f0 = ((Integer) numCenter.getValue()).doubleValue() * 1e6;
 			}
-
-			double bw = ((Integer) numCenter.getValue()).doubleValue() - ((Integer) numBandwidth.getValue()).doubleValue();
-			f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
+			else
+			{
+				if ((Integer) numBandwidth.getValue() > (Integer) numCenter.getValue())
+				{
+					JOptionPane.showMessageDialog(f, "Upper and Lower Frequency mismatch", "Record",
+							JOptionPane.ERROR_MESSAGE);
+					throw new Exception("LowFreq > HighFreq");
+				}
+	
+				double bw = ((Integer) numCenter.getValue()).doubleValue() - ((Integer) numBandwidth.getValue()).doubleValue();
+				f0 = (double) ((Integer) numCenter.getValue() - (bw / 2)) * 1e6;
+			}
 		}
 		return f0;
 	}
